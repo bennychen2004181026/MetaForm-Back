@@ -1,8 +1,6 @@
 require('dotenv').config();
-
 const express = require('express');
 const connectToDB = require('./database/db');
-
 const logger = require('./utils/winston');
 
 connectToDB();
