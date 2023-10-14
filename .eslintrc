@@ -1,0 +1,21 @@
+{
+  "env": {
+    "browser": true,
+    "commonjs": true,
+    "es2021": true
+  },
+
+  "extends": ["airbnb-base","eslint:recommended", "prettier"],
+  "parserOptions": {
+    "ecmaVersion": "latest"
+  },
+  "rules": {
+    "linebreak-style": 0,
+    "no-unused-vars": "error",
+    "endOfLine": "off",
+    "no-console": "error",
+    "prefer-destructuring": ["error", { "object": true, "array": false }],
+    "consistent-return": "off",
+    "func-names": ["error", "never", { "generators": "as-needed" }]
+  }
+}
