@@ -7,9 +7,9 @@ connectToDB();
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  logger.info(`App is listening on ${PORT}`);
+    logger.info(`App is listening on ${PORT}`);
 });
 
 app.get('/', (req, res) => {
-  res.send('Hello World');
+    res.send('Hello World');
 });
