@@ -17,12 +17,14 @@ const connectToDB = async () => {
     // connectionString format: 'mongodb+srv://<username>:<password>@<db host>/<database name>
     // const connectionString = 'mongodb+srv://liyansong2abc:liyansong2A@metaform-cluster.o9dgo23.mongodb.net/metaform';
 
-    const connectionStrings = {
-        production: `mongodb+srv://${DB_USER}:${DB_PASSWORD}@${DB_HOST}/${DB_NAME}`,
-        uat: `mongodb+srv://${DB_USER}:${DB_PASSWORD}@${DB_HOST_UAT}/${DB_NAME}`,
-        development: `${LOCAL_CONNECTION_STRING}/${LOCAL_DB_NAME}`,
-    };
-    const connectionString = connectionStrings[NODE_ENV];
+    let connectionString = '';
+    if (NODE_ENV === 'production' || NODE_ENV === 'uat') {
+        connectionString = `mongodb+srv://${DB_USER}:${DB_PASSWORD}@${
+            NODE_ENV === 'production' ? DB_HOST : DB_HOST_UAT
+        }/${DB_NAME}`;
+    } else {
+        connectionString = `${LOCAL_CONNECTION_STRING}/${LOCAL_DB_NAME}`;
+    }
 
     if (!connectionString) {
         logger.error('connection string is not defined');
