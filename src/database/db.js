@@ -1,11 +1,11 @@
 require('dotenv').config();
-
 const mongoose = require('mongoose');
 const logger = require('../utils/winston');
 
 const connectToDB = async () => {
     const {
         LOCAL_CONNECTION_STRING,
+        LOCAL_DB_NAME,
         NODE_ENV,
         DB_NAME,
         DB_USER,
@@ -16,12 +16,12 @@ const connectToDB = async () => {
 
     // connectionString format: 'mongodb+srv://<username>:<password>@<db host>/<database name>
     // const connectionString = 'mongodb+srv://liyansong2abc:liyansong2A@metaform-cluster.o9dgo23.mongodb.net/metaform';
+
     const connectionStrings = {
         production: `mongodb+srv://${DB_USER}:${DB_PASSWORD}@${DB_HOST}/${DB_NAME}`,
         uat: `mongodb+srv://${DB_USER}:${DB_PASSWORD}@${DB_HOST_UAT}/${DB_NAME}`,
-        development: LOCAL_CONNECTION_STRING,
+        development: `${LOCAL_CONNECTION_STRING}/${LOCAL_DB_NAME}`,
     };
-
     const connectionString = connectionStrings[NODE_ENV];
 
     if (!connectionString) {
