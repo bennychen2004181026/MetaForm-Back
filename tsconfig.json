@@ -7,21 +7,20 @@
         "esModuleInterop": true,
         "forceConsistentCasingInFileNames": true,
         "types": ["node"],
-        "baseUrl": "./",
+        "baseUrl": "./src/",
         "paths": {
-            "*": ["node_modules/*", "src/types/*"],
-            "@models/*": ["src/models/*"],
-            "@middleware/*": ["src/middleware/*"],
-            "@routes/*": ["src/routes/*"],
-            "@utils/*": ["src/utils/*"],
-            "@controllers/*": ["src/controllers/*"],
-            "@config/*": ["src/config/*"],
-            "@database/*": ["src/database/*"]
+            // "*": ["node_modules/*", "src/types/*"],
+            "@models/*": ["models/*"],
+            "@middleware/*": ["middlewares/*"],
+            "@exceptions/*": ["exceptions/*"],
+            "@routes/*": ["routes/*"],
+            "@utils/*": ["utils/*"],
+            "@controllers/*": ["controllers/*"],
+            "@config/*": ["config/*"],
+            "@database/*": ["database/*"]
         },
-        "strict": true,
-        "skipLibCheck": true,
-        "typeRoots": ["./src/types", "./node_modules/@types"]
+        "strict": true
     },
     "include": ["./src"],
-    "exclude": ["node_modules", "**/*.spec.ts"]
+    "exclude": ["node_modules"]
 }

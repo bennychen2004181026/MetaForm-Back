@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
-import connectToDB from './database/db';
 import logger from './utils/winston';
+import connectToDB from './database/db';
 
 connectToDB();
 const app = express();

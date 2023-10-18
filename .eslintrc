@@ -35,10 +35,7 @@
         "no-console": "error",
         "prefer-destructuring": ["error", { "object": true, "array": false }],
         "consistent-return": "off",
-        "import/no-extraneous-dependencies": [
-            "error",
-            { "devDependencies": ["**/*.test.ts", "**/*.test.tsx"] }
-        ],
+        "import/no-extraneous-dependencies": ["error"],
 
         "import/extensions": [
             "error",
@@ -51,9 +48,7 @@
                 "d.ts": "never"
             }
         ],
-        "import/no-import-module-exports": "off",
-        // "import/no-unresolved": "off",
-
+        // "import/no-import-module-exports": "off",
         "func-names": ["error", "never", { "generators": "as-needed" }]
     }
 }
