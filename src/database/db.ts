@@ -1,6 +1,6 @@
-require('dotenv').config();
-const mongoose = require('mongoose');
-const logger = require('../utils/winston');
+import mongoose from 'mongoose';
+import logger from '../utils/winston';
+import 'dotenv/config';
 
 const connectToDB = async () => {
     const {
@@ -35,9 +35,8 @@ const connectToDB = async () => {
         try {
             await mongoose.connect(connectionString);
             logger.info(`Successfully connected to database: ${connectionString}`);
-            return;
         } catch (error) {
-            logger.error('Error connecting to database: ', error);
+            logger.error(`Error connecting to database:${connectionString} `, error);
             process.exit(1);
         }
     };
@@ -47,4 +46,4 @@ const connectToDB = async () => {
         logger.info('mongodb connection lost');
     });
 };
-module.exports = connectToDB;
+export default connectToDB;

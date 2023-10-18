@@ -2,13 +2,32 @@
     "env": {
         "browser": true,
         "commonjs": true,
-        "es2021": true
+        "es2021": true,
+        "node": true
     },
 
-    "extends": ["airbnb", "prettier"],
+    "extends": ["airbnb", "plugin:@typescript-eslint/recommended", "prettier"],
     "parserOptions": {
-        "ecmaVersion": "latest"
+        "ecmaVersion": "latest",
+        "sourceType": "module",
+        "project": "**/tsconfig.json"
     },
+    "parser": "@typescript-eslint/parser",
+    "settings": {
+        "import/parsers": {
+            "@typescript-eslint/parser": [".ts", ".tsx"]
+        },
+        "import/resolver": {
+            "typescript": {
+                "alwaysTryTypes": true,
+                "project": "**/tsconfig.json"
+            },
+            "node": {
+                "extensions": [".js", ".jsx", ".ts", ".tsx", ".d.ts"]
+            }
+        }
+    },
+    "plugins": ["@typescript-eslint", "import"],
     "rules": {
         "linebreak-style": 0,
         "no-unused-vars": "error",
@@ -16,6 +35,25 @@
         "no-console": "error",
         "prefer-destructuring": ["error", { "object": true, "array": false }],
         "consistent-return": "off",
+        "import/no-extraneous-dependencies": [
+            "error",
+            { "devDependencies": ["**/*.test.ts", "**/*.test.tsx"] }
+        ],
+
+        "import/extensions": [
+            "error",
+            "ignorePackages",
+            {
+                "js": "never",
+                "jsx": "never",
+                "ts": "never",
+                "tsx": "never",
+                "d.ts": "never"
+            }
+        ],
+        "import/no-import-module-exports": "off",
+        // "import/no-unresolved": "off",
+
         "func-names": ["error", "never", { "generators": "as-needed" }]
     }
 }
