@@ -15,7 +15,6 @@ const connectToDB = async () => {
     } = process.env;
 
     // connectionString format: 'mongodb+srv://<username>:<password>@<db host>/<database name>
-    // const connectionString = 'mongodb+srv://liyansong2abc:liyansong2A@metaform-cluster.o9dgo23.mongodb.net/metaform';
 
     let connectionString = '';
     if (NODE_ENV === 'production' || NODE_ENV === 'uat') {
