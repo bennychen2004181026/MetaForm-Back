@@ -1,6 +1,8 @@
 * text=auto
 
 *.js text eol=crlf
+*.jsx text eol=crlf
+*.tsx text eol=crlf
 *.ts text eol=crlf
 *.html text eol=crlf
 *.css text eol=crlf
