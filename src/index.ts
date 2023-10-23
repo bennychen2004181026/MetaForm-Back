@@ -1,8 +1,8 @@
 import 'dotenv/config';
 import express from 'express';
-import logger from './utils/winston';
-import router from './routes';
-import connectToDB from './database/db';
+import logger from '@config/utils/winston';
+import router from '@routes/index';
+import connectToDB from '@database/mongoDb';
 
 const app = express();
 app.use(express.json());
