@@ -10,9 +10,9 @@ import {
 
 const companyRouter = Router();
 
-companyRouter.get('/', addCompany);
+companyRouter.get('/', getAllCompanies);
 companyRouter.get('/:id', getCompanyById);
-companyRouter.post('/', getAllCompanies);
+companyRouter.post('/', addCompany);
 companyRouter.patch('/:id', updateCompanyById);
 companyRouter.delete('/:id', deleteCompanyById);
 
