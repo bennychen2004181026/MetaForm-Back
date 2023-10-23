@@ -1,26 +1,29 @@
 {
-    "compilerOptions": {
-        "target": "ES2021",
-        "module": "commonjs",
-        "rootDir": "src",
-        "outDir": "dist",
-        "esModuleInterop": true,
-        "forceConsistentCasingInFileNames": true,
-        "types": ["node"],
-        "baseUrl": "./src/",
-        "paths": {
-            // "*": ["node_modules/*", "src/types/*"],
-            "@models/*": ["models/*"],
-            "@middleware/*": ["middlewares/*"],
-            "@exceptions/*": ["exceptions/*"],
-            "@routes/*": ["routes/*"],
-            "@utils/*": ["utils/*"],
-            "@controllers/*": ["controllers/*"],
-            "@config/*": ["config/*"],
-            "@database/*": ["database/*"]
-        },
-        "strict": true
+  "compilerOptions": {
+    "target": "ES2021",
+    "module": "commonjs",
+    "rootDir": "src",
+    "outDir": "dist",
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "types": ["node"],
+    "baseUrl": "./src/",
+    "paths": {
+      // "*": ["node_modules/*", "src/types/*"],
+      "@models/*": ["models/*"],
+      "@middleware/*": ["middlewares/*"],
+      "@exceptions/*": ["exceptions/*"],
+      "@routes/*": ["routes/*"],
+      "@utils/*": ["utils/*"],
+      "@controllers/*": ["controllers/*"],
+      "@config/*": ["config/*"],
+      "@database/*": ["database/*"]
     },
-    "include": ["./src"],
-    "exclude": ["node_modules"]
+    "strict": true
+  },
+  "include": ["./src"],
+  "exclude": ["node_modules"]
 }
