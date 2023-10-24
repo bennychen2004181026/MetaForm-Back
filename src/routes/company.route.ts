@@ -6,14 +6,14 @@ import {
   getAllCompanies,
   updateCompanyById,
   deleteCompanyById,
-} from '../controllers/company.controller';
+} from '@controllers/company.controller';
 
-const companyRouter = Router();
+const router = Router();
 
-companyRouter.get('/', getAllCompanies);
-companyRouter.get('/:id', getCompanyById);
-companyRouter.post('/', addCompany);
-companyRouter.patch('/:id', updateCompanyById);
-companyRouter.delete('/:id', deleteCompanyById);
+router.get('/', getAllCompanies);
+router.get('/:id', getCompanyById);
+router.post('/', addCompany);
+router.patch('/:id', updateCompanyById);
+router.delete('/:id', deleteCompanyById);
 
-export default companyRouter;
+export default router;

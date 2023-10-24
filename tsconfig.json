@@ -9,14 +9,14 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "types": ["node"],
-    "baseUrl": "./src",
+    "baseUrl": "./",
     "paths": {
-      "@models/*": ["./models/*"],
-      "@middleware/*": ["./middlewares/*"],
-      "@routes/*": ["./routes/*"],
-      "@controllers/*": ["./controllers/*"],
-      "@config/*": ["./config/*"],
-      "@database/*": ["./database/*"]
+      "@models/*": ["src/models/*"],
+      "@middleware/*": ["src/middlewares/*"],
+      "@routes/*": ["src/routes/*"],
+      "@controllers/*": ["src/controllers/*"],
+      "@config/*": ["src/config/*"],
+      "@database/*": ["src/database/*"]
     },
     "strict": true
   },
