@@ -1,5 +1,21 @@
-import companyController = require('./company.controller');
-import staffController = require('./staff.controller');
-import authController = require('./auth.controller');
+import {
+    addCompany,
+    getCompanyById,
+    getAllCompanies,
+    updateCompanyById,
+    deleteCompanyById,
+} from './company.controller';
+import staffController from './staff.controller';
+import authController from './auth.controller';
+import userController from './user.controller';
 
-export default { companyController, staffController, authController };
+export default {
+    addCompany,
+    getCompanyById,
+    getAllCompanies,
+    updateCompanyById,
+    deleteCompanyById,
+    staffController,
+    userController,
+    authController,
+};
