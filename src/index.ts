@@ -5,6 +5,7 @@ import logger from '@config/utils/winston';
 import router from '@routes/index';
 
 
+
 const app = express();
 app.use(express.json());
 app.use('/', router);
