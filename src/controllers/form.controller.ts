@@ -5,14 +5,16 @@ import NotFoundException from '@middleware/exceptions/NotFoundException';
 import Form from '@models/form.model';
 
 const createForm: RequestHandler = async (req: Request, res: Response) => {
-    const { title, createdBy, company, validFrom, expire, questions, description } = req.body;
-    if (!title || !createdBy || !company || !validFrom || !expire || questions.length === 0) {
+    const { title, createdBy, validFrom, expire, questions, description } = req.body;
+    if (!title || !createdBy  || !validFrom || !expire) {
         return res.status(400).json({ error: 'Please fill all required fields' });
+    }
+    if(questions.length === 0){
+        return res.status(400).json({ error: 'Please provide at least 1 question' });
     }
     const form = new Form({
         title,
         createdBy,
-        company,
         validFrom,
         expire,
         description,
