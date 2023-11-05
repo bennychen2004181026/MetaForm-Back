@@ -5,7 +5,6 @@
         "es2021": true,
         "node": true
     },
-
     "extends": ["airbnb", "plugin:@typescript-eslint/recommended", "prettier"],
     "parserOptions": {
         "ecmaVersion": "latest",
@@ -31,6 +30,7 @@
     "rules": {
         "@typescript-eslint/no-var-requires": 0,
         "@typescript-eslint/no-unused-vars": "off",
+        "no-underscore-dangle": ["error", { "allow": ["_id"] }],
         "no-console": "error",
         "no-shadow": "off",
         "@typescript-eslint/no-shadow": ["error"],
