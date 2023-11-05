@@ -6,22 +6,26 @@ import Form from '@models/form.model';
 
 const createForm: RequestHandler = async (req: Request, res: Response) => {
     const { title, createdBy, validFrom, expire, questions, description } = req.body;
-    if (!title || !createdBy  || !validFrom || !expire) {
+    if (!title || !createdBy || !validFrom || !expire) {
         return res.status(400).json({ error: 'Please fill all required fields' });
     }
-    if(questions.length === 0){
+    if (!Array.isArray(questions) || questions.length === 0) {
         return res.status(400).json({ error: 'Please provide at least 1 question' });
     }
-    const form = new Form({
-        title,
-        createdBy,
-        validFrom,
-        expire,
-        description,
-        questions,
-    });
-    await form.save();
-    return res.status(201).json(form);
+    try {
+        const newForm = new Form({
+            title,
+            createdBy,
+            validFrom,
+            expire,
+            description,
+            questions,
+        });
+        await newForm.save();
+        return res.status(201).json(newForm);
+    } catch (err) {
+        throw new Error(`createForm/form controller ${err}`);
+    }
 };
 
 const getFormById: RequestHandler = async (req: Request, res: Response) => {
@@ -30,7 +34,7 @@ const getFormById: RequestHandler = async (req: Request, res: Response) => {
     if (!form) {
         throw new NotFoundException(`Form ${id} is not found`);
     }
-    return res.json(form);
+    return res.status(200).json(form);
 };
 
 const updateFormById: RequestHandler = async (req: Request, res: Response) => {
@@ -50,7 +54,7 @@ const updateFormById: RequestHandler = async (req: Request, res: Response) => {
     if (!form) {
         throw new NotFoundException(`form ${id} is not found`);
     }
-    res.json(form);
+    res.status(200).json(form);
 };
 const deleteFormById: RequestHandler = async (req: Request, res: Response) => {
     const { id } = req.params;
@@ -75,7 +79,7 @@ const addQuestionToForm: RequestHandler = async (req: Request, res: Response) =>
         throw new NotFoundException(`Question ${questionId} is not found`);
     }
     const form = await Form.findByIdAndUpdate(formId, { $addToSet: { questions: questionId } });
-    return res.json(form);
+    return res.status(200).json(form);
 };
 
 const deleteQuestionFromForm: RequestHandler = async (req: Request, res: Response) => {
@@ -90,7 +94,7 @@ const deleteQuestionFromForm: RequestHandler = async (req: Request, res: Respons
     const form = await Form.findByIdAndUpdate(formId, {
         $pull: { questions: questionId },
     });
-    return res.json(form);
+    return res.status(200).json(form);
 };
 
 const addResponseToForm: RequestHandler = async (req: Request, res: Response) => {

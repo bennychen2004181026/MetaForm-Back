@@ -16,10 +16,10 @@ formRouter.post('/', createForm);
 formRouter.get('/:id', getFormById);
 formRouter.patch('/:id', updateFormById);
 formRouter.delete('/:id', deleteFormById);
-formRouter.get('/userForms/:userId', getAllFormsByUserId);
+formRouter.get('/form-management/:userId', getAllFormsByUserId);
 formRouter.post('/:formId/questions/:questionId', addQuestionToForm);
 formRouter.post('/:formId/responses/:responseId', addResponseToForm);
-formRouter.delete('/:studentId/questions/:questionId', deleteQuestionFromForm);
+formRouter.delete('/:formId/questions/:questionId', deleteQuestionFromForm);
 formRouter.delete('/:formId/responses/:responseId', deleteResponseFromForm);
 
 export default formRouter;

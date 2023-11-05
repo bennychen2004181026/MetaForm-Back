@@ -12,6 +12,6 @@ export interface IQuestion extends Document {
     questionBody: string;
     type: questionType;
     mandatory: boolean;
-    options?: [string];
-    fileStorageUrl?: [string];
+    options?: string[];
+    fileStorageUrl?: string[];
 }
