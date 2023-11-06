@@ -39,7 +39,16 @@ const getFormById: RequestHandler = async (req: Request, res: Response) => {
 
 const updateFormById: RequestHandler = async (req: Request, res: Response) => {
     const { id } = req.params;
+    if (!id) {
+        res.status(400).json({ error: 'Please provide form id' });
+    }
     const { title, validFrom, expire, description, questions } = req.body;
+    if (!title || !validFrom || !expire) {
+        return res.status(400).json({ error: 'Please fill all required fields' });
+    }
+    if (!Array.isArray(questions) || questions.length === 0) {
+        return res.status(400).json({ error: 'Please provide at least 1 question' });
+    }
     const form = await Form.findByIdAndUpdate(
         id,
         {
@@ -58,6 +67,9 @@ const updateFormById: RequestHandler = async (req: Request, res: Response) => {
 };
 const deleteFormById: RequestHandler = async (req: Request, res: Response) => {
     const { id } = req.params;
+    if (!id) {
+        res.status(400).json({ error: 'Please provide an userId' });
+    }
     const form = await Form.findById(id);
     if (!form) {
         throw new NotFoundException(`form ${id} is not found`);
@@ -130,6 +142,9 @@ const deleteResponseFromForm: RequestHandler = async (req: Request, res: Respons
 };
 const getAllFormsByUserId: RequestHandler = async (req: Request, res: Response) => {
     const { userId } = req.params;
+    if (!userId) {
+        return res.status(404).json({ message: 'Provide user id' });
+    }
     const userForms = await Form.find({ createdBy: userId }).exec();
     return res.status(200).json(userForms);
 };
