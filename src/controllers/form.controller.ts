@@ -138,9 +138,9 @@ const deleteResponseFromForm: RequestHandler = async (req: Request, res: Respons
 };
 const getAllFormsByUserId: RequestHandler = async (req: Request, res: Response) => {
     const { userId } = req.params;
-    // if (!userId) {
-    //     return res.status(404).json({ message: 'Provide user id' });
-    // }
+    if (!userId) {
+        return res.status(404).json({ message: 'Provide user id' });
+    }
     const userForms = await Form.find({ createdBy: userId }).exec();
     return res.status(200).json(userForms);
 };
