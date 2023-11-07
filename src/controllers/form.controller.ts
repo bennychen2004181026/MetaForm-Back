@@ -23,9 +23,6 @@ const createForm: RequestHandler = async (req: Request, res: Response, next: Nex
 
 const getFormById: RequestHandler = async (req: Request, res: Response) => {
     const { id } = req.params;
-    if (!id) {
-        return res.status(400).json({ error: 'Please provide form id' });
-    }
     const form = await Form.findById(id).exec();
     if (!form) {
         throw new NotFoundException(`Form ${id} is not found`);
@@ -144,7 +141,6 @@ const getAllFormsByUserId: RequestHandler = async (req: Request, res: Response) 
     const userForms = await Form.find({ createdBy: userId }).exec();
     return res.status(200).json(userForms);
 };
-
 export {
     createForm,
     getFormById,

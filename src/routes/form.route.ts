@@ -14,7 +14,7 @@ import {
 const formRouter = Router();
 
 formRouter.get('/:id', getFormById);
-formRouter.get('/form-management/:userId', getAllFormsByUserId);
+formRouter.get('/user/:userId', getAllFormsByUserId);
 
 formRouter.post('/', createForm);
 formRouter.post('/:formId/questions/:questionId', addQuestionToForm);
