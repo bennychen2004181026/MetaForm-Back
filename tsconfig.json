@@ -8,7 +8,7 @@
         "rootDir": "src",
         "outDir": "dist",
         "noUnusedLocals": true,
-        "noImplicitReturns": true,
+        "noImplicitReturns": false,
         "esModuleInterop": true,
         "forceConsistentCasingInFileNames": true,
         "types": ["node"],
@@ -19,7 +19,9 @@
             "@routes/*": ["src/routes/*"],
             "@controllers/*": ["src/controllers/*"],
             "@config/*": ["src/config/*"],
-            "@database/*": ["src/database/*"]
+            "@database/*": ["src/database/*"],
+            "@types/*": ["src/types/*"],
+            "@errors/*": ["src/middlewares/errors/*"]
         },
         "strict": true
     },

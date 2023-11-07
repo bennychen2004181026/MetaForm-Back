@@ -1,7 +1,9 @@
 import Router from 'express';
 import companyRouter from './company.route';
+import formRouter from './form.route';
 
-const v1Router = Router();
-v1Router.use('/companies', companyRouter);
+const router = Router();
+router.use('/companies', companyRouter);
+router.use('/forms', formRouter);
 
-export default v1Router;
+export default router;
