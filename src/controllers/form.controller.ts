@@ -1,35 +1,31 @@
-import { Request, Response, RequestHandler } from 'express';
+import { Request, Response, RequestHandler, NextFunction } from 'express';
 import FormResponse from '@models/formResponse.model';
 import Question from '@models/question.model';
 import NotFoundException from '@middleware/exceptions/NotFoundException';
 import Form from '@models/form.model';
 
-const createForm: RequestHandler = async (req: Request, res: Response) => {
+const createForm: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
     const { title, createdBy, validFrom, expire, questions, description } = req.body;
-    if (!title || !createdBy || !validFrom || !expire) {
-        return res.status(400).json({ error: 'Please fill all required fields' });
-    }
     if (!Array.isArray(questions) || questions.length === 0) {
         return res.status(400).json({ error: 'Please provide at least 1 question' });
     }
-    try {
-        const newForm = new Form({
-            title,
-            createdBy,
-            validFrom,
-            expire,
-            description,
-            questions,
-        });
-        await newForm.save();
-        return res.status(201).json(newForm);
-    } catch (err) {
-        throw new Error(`createForm/form controller ${err}`);
-    }
+    const newForm = new Form({
+        title,
+        createdBy,
+        validFrom,
+        expire,
+        description,
+        questions,
+    });
+    await newForm.save();
+    return res.status(201).json(newForm);
 };
 
 const getFormById: RequestHandler = async (req: Request, res: Response) => {
     const { id } = req.params;
+    if (!id) {
+        return res.status(400).json({ error: 'Please provide form id' });
+    }
     const form = await Form.findById(id).exec();
     if (!form) {
         throw new NotFoundException(`Form ${id} is not found`);
@@ -68,7 +64,7 @@ const updateFormById: RequestHandler = async (req: Request, res: Response) => {
 const deleteFormById: RequestHandler = async (req: Request, res: Response) => {
     const { id } = req.params;
     if (!id) {
-        res.status(400).json({ error: 'Please provide an userId' });
+        res.status(404).json({ error: 'Please provide a formId to be deleted' });
     }
     const form = await Form.findById(id);
     if (!form) {
@@ -142,9 +138,9 @@ const deleteResponseFromForm: RequestHandler = async (req: Request, res: Respons
 };
 const getAllFormsByUserId: RequestHandler = async (req: Request, res: Response) => {
     const { userId } = req.params;
-    if (!userId) {
-        return res.status(404).json({ message: 'Provide user id' });
-    }
+    // if (!userId) {
+    //     return res.status(404).json({ message: 'Provide user id' });
+    // }
     const userForms = await Form.find({ createdBy: userId }).exec();
     return res.status(200).json(userForms);
 };

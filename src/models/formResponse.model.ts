@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose';
 
-const questionSchema = new Schema({});
-const Question = model('Question', questionSchema);
-export default Question;
+const formResponse = new Schema({});
+const FormResponse = model('FormResponse', formResponse);
+export default FormResponse;
