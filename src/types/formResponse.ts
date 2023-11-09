@@ -1,6 +1,6 @@
-import { Document } from 'mongoose';
+import { Schema, Document } from 'mongoose';
 
 export interface IFormResponse extends Document {
     formId: string;
-    answers: string[];
+    answers: Schema.Types.ObjectId[];
 }
