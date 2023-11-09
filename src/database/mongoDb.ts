@@ -22,13 +22,13 @@ const connectToDB = async () => {
 
     interface Config {
         development: string;
-        prod: string;
+        production: string;
         test: string;
     }
 
     const dbConfig: Config = {
         development: `mongodb://${DEV_DB_HOST}:${DEV_DB_PORT}/${DEV_DB_NAME}`,
-        prod: `mongodb+srv://${PROD_DB_USER}:${PROD_DB_PASSWORD}@${PROD_DB_HOST}/${PROD_DB_NAME}`,
+        production: `mongodb+srv://${PROD_DB_USER}:${PROD_DB_PASSWORD}@${PROD_DB_HOST}/${PROD_DB_NAME}`,
         test: `mongodb+srv://${TEST_DB_USER}:${TEST_DB_PASSWORD}@${TEST_DB_HOST}/${TEST_DB_NAME}`,
     };
 
