@@ -8,4 +8,3 @@ export default class FileUploadError extends CustomError {
         Object.setPrototypeOf(this, FileUploadError.prototype);
     }
 }
-

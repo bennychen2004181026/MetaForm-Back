@@ -11,6 +11,7 @@ import ValidationError from '@middleware/errors/ValidationError';
 import NotFoundError from '@errors/NotFoundError';
 import UnknownError from '@errors/UnknownError';
 import CastError from '@middleware/errors/CastError';
+import middlewares from './middlewares';
 
 const app = express();
 app.use(express.json());
@@ -22,6 +23,7 @@ app.use(NotFoundError);
 app.use(CastError);
 app.use(UnknownError);
 
+app.use(middlewares.errorHandler);
 const { PORT } = process.env;
 connectToDB().then(() => {
     app.listen(PORT, () => {

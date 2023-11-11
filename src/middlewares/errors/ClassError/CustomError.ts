@@ -29,5 +29,3 @@ export default abstract class CustomError extends Error {
         return [serialized];
     }
 }
-
-
