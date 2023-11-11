@@ -17,14 +17,17 @@
             "@models/*": ["src/models/*"],
             "@middleware/*": ["src/middlewares/*"],
             "@routes/*": ["src/routes/*"],
+            "@utils/*": ["src/utils/*"],
             "@controllers/*": ["src/controllers/*"],
             "@config/*": ["src/config/*"],
             "@database/*": ["src/database/*"],
+            "@validators/*": ["src/validators/*"],
+            "@customizesTypes/*":["src/types/*"],
             "@types/*": ["src/types/*"],
             "@errors/*": ["src/middlewares/errors/*"]
         },
         "strict": true
     },
-    "include": ["./src"],
+    "include": ["./src","dist/**/.js"],
     "exclude": ["node_modules"]
 }

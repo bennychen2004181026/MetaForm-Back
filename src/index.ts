@@ -1,8 +1,11 @@
 import 'dotenv/config';
 import express from 'express';
 import 'express-async-errors';
+import morgan from 'morgan';
+
 import connectToDB from '@database/mongoDb';
 import logger from '@config/utils/winston';
+import morganOption from '@config/utils/morganOption'
 import router from '@routes/index';
 import ValidationError from '@middleware/errors/ValidationError';
 import NotFoundError from '@errors/NotFoundError';
@@ -11,6 +14,8 @@ import CastError from '@middleware/errors/CastError';
 
 const app = express();
 app.use(express.json());
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev', morganOption));
+
 app.use('/', router);
 app.use(ValidationError);
 app.use(NotFoundError);
