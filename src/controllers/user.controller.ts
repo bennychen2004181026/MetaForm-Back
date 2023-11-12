@@ -2,6 +2,7 @@ import { Request, Response, NextFunction, RequestHandler } from 'express';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 
 import { sendEmail, emailTemplates } from '@utils/emailService';
 import Errors from '@errors/ClassError'
@@ -19,13 +20,13 @@ const sendVerificationEmail: RequestHandler = async (req: Request, res: Response
             throw new Errors.EnvironmentError('Missing environment variables', 'env');
         }
 
-        const verificationToken = jwt.sign({ email, username }, process.env.JWT_SECRET, { expiresIn: '10m' });
+        const verificationToken: string = jwt.sign({ email, username }, process.env.JWT_SECRET, { expiresIn: '10m' });
 
-        const verificationLink = `http://localhost:${process.env.PORT}/users/verify-token/${verificationToken}`;
+        const verificationLink: string = `http://localhost:${process.env.PORT}/users/verify-token/${verificationToken}`;
 
         const emailContent = emailTemplates.verification(verificationLink);
 
-        const isEmailSent = await sendEmail({ to: email, subject: 'Verify your email', html: emailContent });
+        const isEmailSent: boolean = await sendEmail({ to: email, subject: 'Verify your email', html: emailContent });
 
         if (!isEmailSent) {
             throw new Errors.BusinessLogicError('Failed to send verification email');
@@ -34,7 +35,7 @@ const sendVerificationEmail: RequestHandler = async (req: Request, res: Response
         return res.
             status(200).
             json({ message: `Verification email has been sent to ${email}. Please check your email.` });
-    } catch (error) {
+    } catch (error: unknown) {
         next(error);
     }
 };
@@ -54,7 +55,7 @@ const prepareAccountCreation: RequestHandler = async (req: Request, res: Respons
         }
 
         res.status(200).json({ email, username })
-    } catch (error) {
+    } catch (error: unknown) {
         next(error)
     }
 }
@@ -87,7 +88,7 @@ const createAccount: RequestHandler = async (req: Request, res: Response, next: 
 
         res.locals.user = savedUser;
         next();
-    } catch (error) {
+    } catch (error: unknown) {
         next(error)
     }
 }
@@ -133,7 +134,6 @@ const completeAccount: RequestHandler = async (req: Request, res: Response, next
         const updatedCompany: ICompany = await companyInfo.save();
 
         user.company = updatedCompany._id;
-
         user.isAccountComplete = true;
         user.isActive = true;
         const updatedUser: IUser = await user.save();
@@ -171,13 +171,13 @@ const login: RequestHandler = async (req: Request, res: Response, next: NextFunc
             throw new Errors.NotFoundError('User not found or User does not has password', 'User');
         }
 
-        const comparePassword = await bcrypt.compare(password, user.password);
+        const comparePassword: boolean = await bcrypt.compare(password, user.password);
 
         if (!comparePassword) {
             throw new Errors.AuthorizationError('Invalid credentials', 'password');
         }
 
-        const token = generateTokenHelper(user._id, user.role);
+        const token: string = generateTokenHelper(user._id, user.role);
 
         return res.status(200).json({
             message: 'Logged in successfully',
@@ -190,10 +190,52 @@ const login: RequestHandler = async (req: Request, res: Response, next: NextFunc
     }
 };
 
+const forgotPassword = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+
+    if (!process.env.PORT || !process.env.EMAIL_USERNAME || !process.env.SENDGRID_API_KEY) {
+        return next(new Errors.EnvironmentError('Missing environment variables', 'env'));
+    }
+
+    const resetToken: string = crypto.randomBytes(32).toString('hex');
+    const passwordExpires: Date = new Date(Date.now() + 600000);
+
+    const verificationLink = `http://localhost:${process.env.PORT}/users/verify-token/${resetToken}`;
+
+    try {
+        const { email } = req.body;
+
+        const user: IUser | null = await User.findOne({ email })
+        if (!user) {
+            return res.status(200).json({ message: 'If your email is registered with us, you will receive a password reset email.' })
+        }
+
+
+        await User.findOneAndUpdate(
+            { email: user.email },
+            { $set: { passwordResetToken: resetToken, passwordResetExpires: passwordExpires } },
+        )
+
+        const emailContent: string = emailTemplates.resetPassword(verificationLink);
+
+        const isEmailSent: boolean = await sendEmail({ to: email, subject: 'Reset Password', html: emailContent });
+
+        if (!isEmailSent) {
+            throw new Errors.BusinessLogicError('Failed to send resetPassword email');
+        }
+
+        return res.
+            status(200).
+            json({ message: `ResetPassword email has been sent to ${email}. Please check your email.` });
+    } catch (error: unknown) {
+        next(error)
+    }
+}
+
 export default {
     sendVerificationEmail,
     prepareAccountCreation,
     createAccount,
     completeAccount,
-    login
+    login,
+    forgotPassword
 }

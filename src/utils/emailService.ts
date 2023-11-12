@@ -6,10 +6,10 @@ const transporter = nodemailer.createTransport({
     host: 'smtp.sendgrid.net',
     port: 587,
     auth: {
-      user: 'apikey', 
-      pass: process.env.SENDGRID_API_KEY
+        user: 'apikey',
+        pass: process.env.SENDGRID_API_KEY
     }
-  });
+});
 
 const emailTemplates = {
     verification: (verificationLink: string): string => `
@@ -26,6 +26,20 @@ const emailTemplates = {
     </body>
     </html>
 `,
+    resetPassword: (resetLink: string): string => `
+    <html>
+    <body>
+      <p>Hello,</p>
+      <p>You requested to reset your password. Please click the button below to set a new password. If you did not request a password reset, please ignore this email.</p>
+      <p>This link expires in 10 minutes. If you did not request a password reset, you can safely ignore this email.</p>
+      <a href="${resetLink}" 
+         style="background-color: blue; color: white; padding: 12px 16px; text-align: center; 
+                text-decoration: none; display: inline-block; border-radius: 8px; font-size: 16px; margin-top: 10px;">
+        Reset my password
+      </a>
+    </body>
+    </html>
+`
 };
 
 const sendEmail = async (options: EmailOptions): Promise<boolean> => {
@@ -35,7 +49,7 @@ const sendEmail = async (options: EmailOptions): Promise<boolean> => {
         subject: options.subject,
         html: options.html
     }
-logger.info(mailOptions.to)
+    logger.info(mailOptions.to)
     try {
         await transporter.sendMail(mailOptions);
         return true;
