@@ -7,6 +7,7 @@ import middlewares from '@middleware/index';
 const userRouter = express.Router();
 
 userRouter.post('/verify-email',
+    middlewares.alreadyLogin,
     routeValidators.emailValidator,
     routeValidators.checkUserExistence,
     userControllers.sendVerificationEmail
@@ -18,6 +19,7 @@ userRouter.get('/verify-token/:token',
 )
 
 userRouter.post('/create-account',
+    middlewares.alreadyLogin,
     routeValidators.userInfosValidator,
     userControllers.createAccount,
     userRouteMiddlewares.generateToken,
