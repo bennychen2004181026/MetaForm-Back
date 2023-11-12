@@ -2,6 +2,7 @@ import { Request, Response, NextFunction, RequestHandler } from 'express';
 import jwt from 'jsonwebtoken';
 import { sendEmail, emailTemplates } from '@utils/emailService';
 import Errors from '@errors/ClassError'
+import User from '@models/user.model';
 
 const sendVerificationEmail: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
@@ -32,7 +33,23 @@ const sendVerificationEmail: RequestHandler = async (req: Request, res: Response
 };
 
 const prepareAccountCreation: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
-    
+    const { username, email } = res.locals.decoded;
+
+    if (!username || !email) {
+        return next(new Errors.ValidationError('Username or email not provided', 'token'))
+    }
+
+    try {
+        const userExists = await User.findOne({ $or: [{ email }, { username }] })
+
+        if (userExists) {
+            return next(new Errors.DatabaseError('Email or username already in use', 'user'))
+        }
+
+        res.status(200).json({ email, username })
+    } catch (error) {
+        next(error)
+    }
 }
 
 export default {
