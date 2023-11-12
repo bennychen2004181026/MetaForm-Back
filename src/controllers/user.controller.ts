@@ -53,7 +53,7 @@ const prepareAccountCreation: RequestHandler = async (req: Request, res: Respons
     }
 }
 
-const createAccount = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+const createAccount: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
         const { email, username, firstName, lastName, password } = req.body
 

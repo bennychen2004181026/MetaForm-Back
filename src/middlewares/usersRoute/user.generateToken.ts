@@ -1,4 +1,4 @@
-import { NextFunction, Response } from 'express';
+import { NextFunction, Response, Request } from 'express';
 import jwt from 'jsonwebtoken';
 import Errors from '@errors/ClassError';
 
