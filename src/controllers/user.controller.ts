@@ -135,6 +135,7 @@ const completeAccount: RequestHandler = async (req: Request, res: Response, next
         user.company = updatedCompany._id;
 
         user.isAccountComplete = true;
+        user.isActive = true;
         const updatedUser: IUser = await user.save();
         const userJson: IUser = updatedUser.toJSON();
 
