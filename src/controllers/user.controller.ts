@@ -132,6 +132,7 @@ const completeAccount = async (req: Request, res: Response, next: NextFunction):
         user.company = updatedCompany._id;
 
         user.isAccountComplete = true;
+        user.isActive = true;
         const updatedUser:IUser = await user.save();
         const userJson:IUser = updatedUser.toJSON();
 
