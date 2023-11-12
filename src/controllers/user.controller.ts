@@ -1,19 +1,20 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
 import jwt from 'jsonwebtoken';
 import { sendEmail, emailTemplates } from '@utils/emailService';
 import Errors from '@errors/ClassError'
+import User from '@models/user.model';
 
-const sendVerificationEmail = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+const sendVerificationEmail: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
         const { email, username } = req.body;
 
         if (!process.env.JWT_SECRET || !process.env.PORT || !process.env.EMAIL_USERNAME || !process.env.SENDGRID_API_KEY) {
-            throw new Errors.EnvironmentError('Missing environment variables','env');
+            throw new Errors.EnvironmentError('Missing environment variables', 'env');
         }
 
         const verificationToken = jwt.sign({ email, username }, process.env.JWT_SECRET, { expiresIn: '10m' });
 
-        const verificationLink = `http://localhost:${process.env.PORT}/users/create-account/${verificationToken}`;
+        const verificationLink = `http://localhost:${process.env.PORT}/users/verify-token/${verificationToken}`;
 
         const emailContent = emailTemplates.verification(verificationLink);
 
@@ -31,6 +32,11 @@ const sendVerificationEmail = async (req: Request, res: Response, next: NextFunc
     }
 };
 
+const prepareAccountCreation: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    
+}
+
 export default {
-    sendVerificationEmail
+    sendVerificationEmail,
+    prepareAccountCreation
 }
