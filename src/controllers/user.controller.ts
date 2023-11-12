@@ -33,17 +33,17 @@ const sendVerificationEmail: RequestHandler = async (req: Request, res: Response
 };
 
 const prepareAccountCreation: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
-    const { username, email } = res.locals.decoded;
-
-    if (!username || !email) {
-        return next(new Errors.ValidationError('Username or email not provided', 'token'))
-    }
-
     try {
+        const { username, email } = res.locals.decoded;
+
+        if (!username || !email) {
+            throw new Errors.ValidationError('Username or email not provided', 'token')
+        }
+
         const userExists = await User.findOne({ $or: [{ email }, { username }] })
 
         if (userExists) {
-            return next(new Errors.DatabaseError('Email or username already in use', 'user'))
+            throw new Errors.DatabaseError('Email or username already in use', 'user')
         }
 
         res.status(200).json({ email, username })
