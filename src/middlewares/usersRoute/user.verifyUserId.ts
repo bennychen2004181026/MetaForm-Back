@@ -6,7 +6,7 @@ const verifyUserId = async (req: Request, res: Response, next: NextFunction): Pr
   const { userId } = req.params;
   const { authorization } = req.headers;
 
-  if (!userId || userId.trim() === '') {
+  if (!userId || userId === ':userId') {
     return next(new Errors.AuthorizationError('UserId parameter must be provided', 'UserId'));
   }
 
@@ -41,7 +41,7 @@ const verifyUserId = async (req: Request, res: Response, next: NextFunction): Pr
     next();
   }
   catch (error) {
-      next(error);
+    next(error);
   }
 };
 

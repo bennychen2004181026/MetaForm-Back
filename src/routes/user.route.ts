@@ -17,10 +17,18 @@ userRouter.get('/verify-token/:token',
 )
 
 userRouter.post('/create-account',
-routeValidators.userInfosValidator,
-userControllers.createAccount,
-userRouteMiddlewares.generateToken,
-userRouteMiddlewares.sendTokenAndUser
+    routeValidators.userInfosValidator,
+    userControllers.createAccount,
+    userRouteMiddlewares.generateToken,
+    userRouteMiddlewares.sendTokenAndUser
 )
+
+userRouter.post('/:userId/completeAccount',
+    userRouteMiddlewares.verifyUserId,
+    userRouteMiddlewares.verifyHeaderToken,
+    routeValidators.completeAccountValidator,
+    userRouteMiddlewares.checkAccountCompletion,
+    userControllers.completeAccount
+);
 
 export default userRouter;

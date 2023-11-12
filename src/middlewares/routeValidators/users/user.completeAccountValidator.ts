@@ -19,11 +19,10 @@ const completeAccountValidator = [
 
     body('logo')
         .optional()
-        .isURL()
-        .withMessage('Invalid logo URL'),
+        .isString(),
 
     body('industry')
-        .isArray()
+        .isString()
         .notEmpty()
         .withMessage('Industry is required'),
 
@@ -31,7 +30,7 @@ const completeAccountValidator = [
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             const errorMessages = errors.array().map(err => err.msg).join(', ');
-            return next(new Errors.ValidationError(errorMessages, 'Company information'));
+            return next(new Errors.ValidationError(errorMessages, 'Company1 information'));
         }
         next();
     }
