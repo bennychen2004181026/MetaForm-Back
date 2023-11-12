@@ -77,7 +77,9 @@ const createAccount = async (req: Request, res: Response, next: NextFunction): P
         const newUser: IUser = new User(partialProperties);
         const savedUser = await newUser.save();
 
-        res.locals.user = savedUser
+        savedUser.toJSON();
+
+        res.locals.user = savedUser;
         next();
     } catch (error) {
         next(error)
