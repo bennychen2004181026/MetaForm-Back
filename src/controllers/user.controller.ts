@@ -1,9 +1,12 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 import { sendEmail, emailTemplates } from '@utils/emailService';
 import Errors from '@errors/ClassError'
 import User from '@models/user.model';
+import Company from '@models/company.model';
 import { IUser } from '@customizesTypes/users';
+import { ICompany } from '@customizesTypes/companies';
 
 const sendVerificationEmail: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
@@ -86,8 +89,73 @@ const createAccount: RequestHandler = async (req: Request, res: Response, next: 
     }
 }
 
+const completeAccount = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    let session: mongoose.ClientSession | null = null;
+    try {
+        session = await mongoose.startSession();
+        session.startTransaction();
+
+        const { userId } = res.locals;
+
+        if (!userId || userId.trim() === '') {
+            throw new Errors.NotFoundError('User not found', 'userId');
+        }
+
+        const user = await User.findById(userId).exec()
+
+        if (!user) {
+            throw new Errors.NotFoundError('User not found in the database', 'user not found in database');
+        }
+
+        const {
+            companyName,
+            abn,
+            logo,
+            industry,
+        } = req.body;
+
+        const partialProperties: Partial<ICompany> = {
+            companyName,
+            abn,
+            logo,
+            industry,
+        }
+
+        const companyInfo: ICompany = new Company({
+            ...partialProperties,
+            isActive: true,
+            employees: [user._id],
+        });
+
+        const updatedCompany: ICompany = await companyInfo.save();
+
+        user.company = updatedCompany._id;
+
+        user.isAccountComplete = true;
+        const updatedUser:IUser = await user.save();
+        const userJson:IUser = updatedUser.toJSON();
+
+        await session.commitTransaction();
+        session.endSession();
+
+        return res.status(201).json({
+            message: 'Successfully bound the company to the user account.Complete account setting',
+            updatedCompany,
+            userJson
+        });
+    }
+    catch (error: unknown) {
+        if (session) {
+            await session.abortTransaction();
+            session.endSession();
+        }
+        next(error);
+    }
+};
+
 export default {
     sendVerificationEmail,
     prepareAccountCreation,
-    createAccount
+    createAccount,
+    completeAccount
 }
