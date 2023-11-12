@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from 'jsonwebtoken';
 import Errors from '@errors/ClassError'
+import {validateToken} from '@utils/jwt'
 
 const verifyUserId = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
   const { userId } = req.params;
@@ -31,7 +31,7 @@ const verifyUserId = async (req: Request, res: Response, next: NextFunction): Pr
   }
 
   try {
-    const decoded = jwt.verify(authToken, process.env.JWT_SECRET) as { userId: string };
+    const decoded = validateToken(authToken) as { userId: string };
 
     if (decoded.userId !== userId) {
       return next(new Errors.AuthorizationError('Invalid user ID', 'userId'));

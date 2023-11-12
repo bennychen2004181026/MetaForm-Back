@@ -1,6 +1,6 @@
-import jwt from 'jsonwebtoken';
 import { NextFunction, Request, Response } from 'express';
 import Errors from '@errors/ClassError';
+import {validateToken} from '@utils/jwt'
 
 const verifyHeaderToken = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     const { authorization } = req.headers;
@@ -26,7 +26,7 @@ const verifyHeaderToken = async (req: Request, res: Response, next: NextFunction
     }
 
     try {
-        const decoded = jwt.verify(authToken, process.env.JWT_SECRET) as { userId: string };
+        const decoded = validateToken(authToken) as { userId: string };
         res.locals.userId = decoded.userId;
         next();
     }

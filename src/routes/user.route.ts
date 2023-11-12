@@ -2,6 +2,7 @@ import express from 'express';
 import routeValidators from '@middleware/routeValidators/users';
 import userRouteMiddlewares from '@middleware/usersRoute'
 import userControllers from '@controllers/user.controller';
+import middlewares from '@middleware/index';
 
 const userRouter = express.Router();
 
@@ -30,5 +31,11 @@ userRouter.post('/:userId/completeAccount',
     userRouteMiddlewares.checkAccountCompletion,
     userControllers.completeAccount
 );
+
+userRouter.post('/login',
+    middlewares.alreadyLogin,
+    routeValidators.loginValidator,
+    userControllers.login
+)
 
 export default userRouter;

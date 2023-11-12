@@ -18,7 +18,7 @@ const loginValidator = [
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             const errorMessages = errors.array().map(err => err.msg).join(', ');
-            return next(new Errors.ValidationError(errorMessages, 'Login information'));
+            return next(new Errors.ValidationError(errorMessages, 'Login'));
         }
         next();
     }

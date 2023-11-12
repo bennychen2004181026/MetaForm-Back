@@ -1,12 +1,15 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
+import bcrypt from 'bcrypt';
+
 import { sendEmail, emailTemplates } from '@utils/emailService';
 import Errors from '@errors/ClassError'
 import User from '@models/user.model';
 import Company from '@models/company.model';
 import { IUser } from '@customizesTypes/users';
 import { ICompany } from '@customizesTypes/companies';
+import { generateTokenHelper } from '@utils/jwt'
 
 const sendVerificationEmail: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
@@ -89,7 +92,7 @@ const createAccount: RequestHandler = async (req: Request, res: Response, next: 
     }
 }
 
-const completeAccount = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+const completeAccount: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     let session: mongoose.ClientSession | null = null;
     try {
         session = await mongoose.startSession();
@@ -132,8 +135,8 @@ const completeAccount = async (req: Request, res: Response, next: NextFunction):
         user.company = updatedCompany._id;
 
         user.isAccountComplete = true;
-        const updatedUser:IUser = await user.save();
-        const userJson:IUser = updatedUser.toJSON();
+        const updatedUser: IUser = await user.save();
+        const userJson: IUser = updatedUser.toJSON();
 
         await session.commitTransaction();
         session.endSession();
@@ -153,9 +156,43 @@ const completeAccount = async (req: Request, res: Response, next: NextFunction):
     }
 };
 
+const login: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            throw new Errors.ValidationError('Email and password are required for login', 'should provide password and mail');
+        }
+
+        const user: IUser | null = await User.findOne({ email }).select('+password').exec();
+
+        if (!user || !user.password) {
+            throw new Errors.NotFoundError('User not found or User does not has password', 'User');
+        }
+
+        const comparePassword = await bcrypt.compare(password, user.password);
+
+        if (!comparePassword) {
+            throw new Errors.AuthorizationError('Invalid credentials', 'password');
+        }
+
+        const token = generateTokenHelper(user._id, user.role);
+
+        return res.status(200).json({
+            message: 'Logged in successfully',
+            token,
+            user
+        });
+    }
+    catch (error: unknown) {
+        return next(error);
+    }
+};
+
 export default {
     sendVerificationEmail,
     prepareAccountCreation,
     createAccount,
-    completeAccount
+    completeAccount,
+    login
 }

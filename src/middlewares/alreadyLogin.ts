@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
 import Errors from '@errors/ClassError';
+import {validateToken} from '@utils/jwt'
 
 const alreadyLogin = (req: Request, res: Response, next: NextFunction): void => {
     const { authorization } = req.headers;
@@ -25,7 +25,7 @@ const alreadyLogin = (req: Request, res: Response, next: NextFunction): void => 
     }
 
     try {
-        jwt.verify(authToken, process.env.JWT_SECRET);
+        validateToken(authToken);
         return next(new Errors.AuthorizationError('You are already logged in.', 'Authorization'));
     }
     catch (error) {
