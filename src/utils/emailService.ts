@@ -1,6 +1,5 @@
 import nodemailer from 'nodemailer'
 import EmailOptions from '@customizesTypes/EmailOptions'
-import logger from '@config/utils/winston';
 
 const transporter = nodemailer.createTransport({
     host: 'smtp.sendgrid.net',
@@ -49,7 +48,7 @@ const sendEmail = async (options: EmailOptions): Promise<boolean> => {
         subject: options.subject,
         html: options.html
     }
-    logger.info(mailOptions.to)
+
     try {
         await transporter.sendMail(mailOptions);
         return true;
