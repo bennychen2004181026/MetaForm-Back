@@ -40,4 +40,10 @@ userRouter.post('/login',
     userControllers.login
 )
 
+userRouter.post('/forgotPassword',
+    middlewares.alreadyLogin,
+    routeValidators.forgotPasswordValidator,
+    userControllers.forgotPassword
+)
+
 export default userRouter;

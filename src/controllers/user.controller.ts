@@ -199,7 +199,7 @@ const forgotPassword = async (req: Request, res: Response, next: NextFunction): 
     const resetToken: string = crypto.randomBytes(32).toString('hex');
     const passwordExpires: Date = new Date(Date.now() + 600000);
 
-    const verificationLink = `http://localhost:${process.env.PORT}/users/verify-token/${resetToken}`;
+    const verificationLink = `http://localhost:${process.env.PORT}/users/resetPassword/${resetToken}`;
 
     try {
         const { email } = req.body;
