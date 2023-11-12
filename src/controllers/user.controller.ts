@@ -57,7 +57,7 @@ const createAccount: RequestHandler = async (req: Request, res: Response, next: 
     try {
         const { email, username, firstName, lastName, password } = req.body
 
-        const existingUser = await User.findOne({ $pr: [{ email }, { username }] })
+        const existingUser = await User.findOne({ $or: [{ email }, { username }] })
 
         if (existingUser) {
             throw new Errors.ValidationError('Email or username already in use', 'email/username')
