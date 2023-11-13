@@ -199,7 +199,7 @@ const forgotPassword = async (req: Request, res: Response, next: NextFunction): 
     const resetToken: string = crypto.randomBytes(32).toString('hex');
     const passwordExpires: Date = new Date(Date.now() + 600000);
 
-    const verificationLink = `http://localhost:${process.env.PORT}/users/resetPassword/${resetToken}`;
+    const verificationLink = `http://localhost:${process.env.PORT}/users/resetPassword?token=${resetToken}`;
 
     try {
         const { email } = req.body;
@@ -231,11 +231,43 @@ const forgotPassword = async (req: Request, res: Response, next: NextFunction): 
     }
 }
 
+const verifyResetToken = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    const { token, newPassword } = req.body
+
+    try {
+        const user = await User.findOne({
+            passwordResetToken: token,
+            passwordResetExpires: { $gt: Date.now() }
+        })
+
+        if (!user) {
+            throw new Errors.ValidationError('Invalid or expired password reset token.', 'Token')
+        }
+        await User.findOneAndUpdate(
+            { _id: user._id },
+            {
+                $set: {
+                    password: newPassword
+                }
+            },
+            {
+                $unset: {
+                    passwordResetToken: '',
+                    passwordResetExpires: ''
+                }
+            })
+        res.status(200).json({ message: 'Your password has been successfully reset.' });
+    } catch (error) {
+        next(error)
+    }
+}
+
 export default {
     sendVerificationEmail,
     prepareAccountCreation,
     createAccount,
     completeAccount,
     login,
-    forgotPassword
+    forgotPassword,
+    verifyResetToken
 }
