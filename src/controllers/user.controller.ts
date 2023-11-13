@@ -243,19 +243,11 @@ const verifyResetToken = async (req: Request, res: Response, next: NextFunction)
         if (!user) {
             throw new Errors.ValidationError('Invalid or expired password reset token.', 'Token')
         }
-        await User.findOneAndUpdate(
-            { _id: user._id },
-            {
-                $set: {
-                    password: newPassword
-                }
-            },
-            {
-                $unset: {
-                    passwordResetToken: '',
-                    passwordResetExpires: ''
-                }
-            })
+        user.password = newPassword;
+        user.passwordResetToken = undefined;
+        user.passwordResetExpires = undefined;
+
+        await user.save();
         res.status(200).json({ message: 'Your password has been successfully reset.' });
     } catch (error) {
         next(error)
