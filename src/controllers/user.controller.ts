@@ -232,18 +232,18 @@ const forgotPassword = async (req: Request, res: Response, next: NextFunction): 
 }
 
 const resetPassword = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
-    const { token, newPassword } = req.body
+    const { token, password } = req.body
 
     try {
         const user = await User.findOne({
             passwordResetToken: token,
             passwordResetExpires: { $gt: Date.now() }
-        })
+        }).select('+password');
 
         if (!user) {
             throw new Errors.ValidationError('Invalid or expired password reset token.', 'Token')
         }
-        user.password = newPassword;
+        user.password = password;
         user.passwordResetToken = undefined;
         user.passwordResetExpires = undefined;
 
