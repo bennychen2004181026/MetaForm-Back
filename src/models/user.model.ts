@@ -110,6 +110,10 @@ const UserSchema: Schema = new Schema(
 );
 
 UserSchema.pre('save', async function (next: CallbackWithoutResultAndOptionalError) {
+    if (!this.password) {
+        return next();
+    }
+
     if (this.isModified('password') || this.isNew) {
         try {
             const saltRounds = 10;
