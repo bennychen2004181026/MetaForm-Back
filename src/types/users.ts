@@ -14,7 +14,7 @@ export enum Role {
 export interface IUser extends Document {
   username: string;
   firstName: string;
-  lastName: string;
+  lastName?: string;
   email: string;
   password?: string;
   createdForms?: ObjectId[];

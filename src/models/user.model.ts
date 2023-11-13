@@ -8,22 +8,15 @@ const UserSchema: Schema = new Schema(
         username: {
             type: String,
             required: true,
-            unique: true,
             minlength: 5,
             maxlength: 20,
-            index: true,
         },
         firstName: {
             type: String,
             required: true,
-            minlength: 1,
-            maxlength: 30
         },
         lastName: {
             type: String,
-            required: true,
-            minlength: 1,
-            maxlength: 30
         },
         email: {
             type: String,
