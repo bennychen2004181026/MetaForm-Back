@@ -231,7 +231,7 @@ const forgotPassword = async (req: Request, res: Response, next: NextFunction): 
     }
 }
 
-const verifyResetToken = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+const resetPassword = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     const { token, newPassword } = req.body
 
     try {
@@ -261,5 +261,5 @@ export default {
     completeAccount,
     login,
     forgotPassword,
-    verifyResetToken
+    resetPassword
 }

@@ -4,6 +4,7 @@ import userInfosValidator from '@middleware/routeValidators/users/user.userInfos
 import completeAccountValidator from '@middleware/routeValidators/users/user.completeAccountValidator'
 import loginValidator from '@middleware/routeValidators/users/user.loginValidator'
 import forgotPasswordValidator from '@middleware/routeValidators/users/user.forgotPasswordValidator'
+import resetPasswordValidator from '@middleware/routeValidators/users/user.resetPasswordValidator'
 
 export default {
     checkUserExistence,
@@ -11,5 +12,6 @@ export default {
     userInfosValidator,
     completeAccountValidator,
     loginValidator,
-    forgotPasswordValidator
+    forgotPasswordValidator,
+    resetPasswordValidator
 }
