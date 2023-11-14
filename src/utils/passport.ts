@@ -9,7 +9,7 @@ const clientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
 const options = {
   clientID,
   clientSecret,
-  callbackURL: "http://yourbackend.com/auth/google/callback"
+  callbackURL: "http://localhost:3000/users/auth/google/callback"
 };
 
 passport.use(new GoogleStrategy(options,

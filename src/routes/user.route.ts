@@ -1,8 +1,10 @@
-import express from 'express';
+import express,{ Request,Response,NextFunction } from 'express';
+import passport from 'passport';
 import routeValidators from '@middleware/routeValidators/users';
 import userRouteMiddlewares from '@middleware/usersRoute'
 import userControllers from '@controllers/user.controller';
 import middlewares from '@middleware/index';
+import logger from '@config/utils/winston';
 
 const userRouter = express.Router();
 
@@ -51,4 +53,20 @@ userRouter.post('/resetPassword',
     userControllers.resetPassword
 )
 
+userRouter.get('/auth/google',(req:Request, res:Response, next:NextFunction) => {
+    logger.info("Initiating authentication with Google.");
+    next();
+  }, passport.authenticate('google', { scope: ['profile', 'email'] }))
+
+  userRouter.get('/auth/google/callback', 
+  passport.authenticate('google', { failureRedirect: '/users/login' }),
+  (req:Request, res:Response, next:NextFunction) => {
+    logger.info("Google authentication successful, user:", req.user);
+    res.redirect('/dashboard');
+  },
+  (error: Error, req:Request, res:Response, next:NextFunction) => {
+    logger.info("Error in Google authentication:", error);
+    res.redirect('/users/login');
+  }
+);
 export default userRouter;
