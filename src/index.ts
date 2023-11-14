@@ -9,16 +9,19 @@ import connectToDB from '@database/mongoDb';
 import logger from '@config/utils/winston';
 import morganOption from '@config/utils/morganOption'
 import router from '@routes/index';
+import sessionConfig from '@utils/sessionConfig'
 import ValidationError from '@middleware/errors/ValidationError';
 import NotFoundError from '@errors/NotFoundError';
 import UnknownError from '@errors/UnknownError';
 import CastError from '@middleware/errors/CastError';
-import middlewares from './middlewares';
+import middlewares from '@middleware/index';
 
 const app = express();
 app.use(express.json());
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev', morganOption));
+app.use(sessionConfig)
 app.use(passport.initialize());
+app.use(passport.session())
 
 app.use('/', router);
 app.use(ValidationError);
