@@ -8,13 +8,28 @@ const sendVerificationEmail: RequestHandler = async (req: Request, res: Response
     try {
         const { email, username } = req.body;
 
-        if (!process.env.JWT_SECRET || !process.env.PORT || !process.env.EMAIL_USERNAME || !process.env.SENDGRID_API_KEY) {
+        const {
+            NODE_ENV,
+            JWT_SECRET,
+            PORT,
+            EMAIL_USERNAME,
+            SENDGRID_API_KEY
+        } = process.env
+
+        if (!NODE_ENV || !JWT_SECRET || !PORT || !EMAIL_USERNAME || !SENDGRID_API_KEY) {
             throw new Errors.EnvironmentError('Missing environment variables', 'env');
         }
 
-        const verificationToken = jwt.sign({ email, username }, process.env.JWT_SECRET, { expiresIn: '10m' });
+        const verificationToken = jwt.sign({ email, username }, JWT_SECRET, { expiresIn: '10m' });
 
-        const verificationLink = `http://localhost:${process.env.PORT}/users/verify-token/${verificationToken}`;
+        let verificationLink: string;
+        if (NODE_ENV === 'production') {
+            verificationLink = `http://localhost:${process.env.PORT}/users/verification/${verificationToken}`;
+        } else if (NODE_ENV === 'test') {
+            verificationLink = `http://localhost:${process.env.PORT}/users/verification/${verificationToken}`;
+        } else {
+            verificationLink = `http://localhost:${process.env.PORT}/users/verification/${verificationToken}`;
+        }
 
         const emailContent = emailTemplates.verification(verificationLink);
 

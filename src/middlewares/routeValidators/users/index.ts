@@ -1,5 +1,5 @@
-import emailValidator from '@middleware/routeValidators/users/user.emailValidator'
-import checkUserExistence from '@middleware/routeValidators/users/user.checkUserExistence'
+import emailValidator from '@middleware/routeValidators/users/emailValidator'
+import checkUserExistence from '@middleware/routeValidators/users/checkUserExistence'
 
 export default {
     checkUserExistence,

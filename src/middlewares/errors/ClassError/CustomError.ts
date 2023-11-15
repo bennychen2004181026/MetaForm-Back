@@ -1,4 +1,4 @@
-import ErrorSerialized from '@customizesTypes/ErrorSerialized'
+import ErrorSerialized from '@interfaces/ErrorSerialized'
 
 export default abstract class CustomError extends Error {
     abstract statusCode: number

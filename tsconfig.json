@@ -22,8 +22,7 @@
             "@config/*": ["src/config/*"],
             "@database/*": ["src/database/*"],
             "@validators/*": ["src/validators/*"],
-            "@customizesTypes/*":["src/types/*"],
-            "@types/*": ["src/types/*"],
+            "@interfaces/*": ["src/interfaces/*"],
             "@errors/*": ["src/middlewares/errors/*"]
         },
         "strict": true

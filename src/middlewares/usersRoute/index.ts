@@ -1,4 +1,4 @@
-import verifyToken from './user.verifyToken'
+import verifyToken from './verifyToken'
 
 export default {
     verifyToken
