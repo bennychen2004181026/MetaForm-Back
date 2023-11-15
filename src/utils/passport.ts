@@ -1,11 +1,7 @@
 import passport from 'passport';
 import passportGoogle, { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import User from '@models/user.model';
-import { IUser } from '@customizesTypes/users'
-
-type User = {
-  _id?: string
-}
+import { IUser,PassportUser } from '@customizesTypes/users'
 
 const clientID = process.env.GOOGLE_CLIENT_ID || '';
 const clientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
@@ -52,7 +48,7 @@ passport.use(new GoogleStrategy(options,
 ));
 
 
-passport.serializeUser((user: User, done): void => {
+passport.serializeUser((user: PassportUser, done): void => {
   done(null, user._id);
 });
 

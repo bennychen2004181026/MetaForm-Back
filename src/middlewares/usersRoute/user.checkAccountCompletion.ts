@@ -5,20 +5,18 @@ import Errors from '@errors/ClassError';
 
 const checkAccountCompletion = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
 
-    const { userId } = res.locals;
-
-    if (!userId || userId.trim() === '') {
-        return next(new Errors.AuthorizationError('UserId must be provided', 'Authorization'));
-    }
+    const { userId, token, user } = res.locals;
 
     try {
-        const user = await User.findById(userId)
+        if (!userId || !token) {
+            return next(new Errors.AuthorizationError('UserId and token must be provided', 'Authorization'));
+        }
 
         if (!user) {
             return next(new Errors.NotFoundError('User not found in the database', 'user'));
         }
 
-        // Scenario 1: User who has labeled as account not completed but with company attached is trying to access '/completeAccountWithCom
+        // Scenario 1: User who has labeled as account not completed but with company attached
         if (!user.isAccountComplete && user.company) {
 
             const companyExists = await Company.exists({ _id: user.company }).exec();
@@ -28,16 +26,24 @@ const checkAccountCompletion = async (req: Request, res: Response, next: NextFun
                     { _id: user._id },
                     { $unset: { company: "" } }
                 ).exec();
-                return next(new Errors.BusinessLogicError('Company not found, please complete the company binding', 'company binding'));
+                return next();
             }
-            await User.updateOne(
+
+            const updatedUser = await User.findOneAndUpdate(
                 { _id: user._id },
-                { isAccountComplete: true }
-            )
-            return next(new Errors.BusinessLogicError('User has company attached already', 'user'));
+                { isAccountComplete: true },
+                { new: true }
+            );
+
+            return res.status(200).json({
+                message: 'Account setup is already complete,you are logged in now',
+                updatedUser,
+                company: companyExists,
+                token
+            });
         }
 
-        // Scenario 2: User who has already label account completed without the company attached is trying to access '/completeAccountWithCom
+        // Scenario 2: User who has already label account completed without the company attached
         if (user.isAccountComplete && !user.company) {
             await User.updateOne(
                 { _id: user._id },
@@ -46,7 +52,7 @@ const checkAccountCompletion = async (req: Request, res: Response, next: NextFun
             return next();
         }
 
-        // Scenario 3: User who has already label account completed with the company attached is trying to access '/completeAccountWithCom
+        // Scenario 3: User who has already label account completed with the company attached
         if (user.isAccountComplete && user.company) {
             const companyExists = await Company.exists({ _id: user.company }).exec();
             if (!companyExists) {
@@ -57,9 +63,21 @@ const checkAccountCompletion = async (req: Request, res: Response, next: NextFun
                         $unset: { company: "" }
                     }
                 ).exec();
-                return next(new Errors.NotFoundError('Company not found, please complete the company binding', 'company binding'));
+                return next();
             }
-            return next(new Errors.BusinessLogicError('User has company attached already', 'user'));
+
+            const updatedUser = await User.findOneAndUpdate(
+                { _id: user._id },
+                { isAccountComplete: true },
+                { new: true }
+            );
+
+            return res.status(200).json({
+                message: 'Account setup is already complete,you are logged in now',
+                updatedUser,
+                company: companyExists,
+                token
+            });
         }
 
         // Scenario 4: Newly created user

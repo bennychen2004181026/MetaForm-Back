@@ -30,3 +30,7 @@ export interface IUser extends Document {
   currentSubscription?: ObjectId;
   paymentHistory?: ObjectId[];
 }
+
+export type PassportUser = {
+  _id?: string
+}

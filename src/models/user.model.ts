@@ -8,6 +8,8 @@ const UserSchema: Schema = new Schema(
         username: {
             type: String,
             required: true,
+            unique:false,
+            index:false,
             minlength: 5,
             maxlength: 20,
         },
@@ -129,6 +131,10 @@ UserSchema.methods.toJSON = function () {
     delete obj.password;
     return obj;
 };
+
+if (mongoose.models.User) {
+    delete mongoose.models.User;
+  }
 
 const User = mongoose.model<IUser>('User', UserSchema);
 
