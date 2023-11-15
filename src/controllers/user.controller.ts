@@ -205,7 +205,7 @@ const login: RequestHandler = async (req: Request, res: Response, next: NextFunc
     }
 };
 
-const forgotPassword = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+const forgotPassword: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     const {
         NODE_ENV,
         JWT_SECRET,
