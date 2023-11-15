@@ -11,7 +11,7 @@ userRouter.post('/verify-email',
     userControllers.sendVerificationEmail
 );
 
-userRouter.get('/verify-token/:token',
+userRouter.get('/verification/:token',
     userRouteMiddlewares.verifyToken,
     userControllers.prepareAccountCreation
 )
