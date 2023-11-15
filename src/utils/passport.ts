@@ -3,6 +3,10 @@ import passportGoogle, { Strategy as GoogleStrategy } from "passport-google-oaut
 import User from '@models/user.model';
 import { IUser } from '@customizesTypes/users'
 
+type User = {
+  _id?: string
+}
+
 const clientID = process.env.GOOGLE_CLIENT_ID || '';
 const clientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
 
@@ -46,5 +50,19 @@ passport.use(new GoogleStrategy(options,
     }
   }
 ));
+
+
+passport.serializeUser((user: User, done): void => {
+  done(null, user._id);
+});
+
+passport.deserializeUser(async (id: string | null | undefined, done): Promise<void> => {
+  try {
+    const user: IUser | null | undefined = await User.findById(id);
+    done(null, user);
+  } catch (error: unknown) {
+    done(error);
+  }
+});
 
 export default passport;

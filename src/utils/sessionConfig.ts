@@ -1,10 +1,10 @@
-import { RequestHandler } from 'express';
+import express from 'express';
 import session from 'express-session';
 import MongoStore from 'connect-mongo';
 import EnvConfig from '@customizesTypes/EnvConfig'
 import logger from '@config/utils/winston';
 
-const sessionConfig: RequestHandler = async () => {
+const sessionConfig = (app: express.Application): void => {
     const {
         DEV_DB_HOST,
         DEV_DB_PORT,
@@ -46,12 +46,12 @@ const sessionConfig: RequestHandler = async () => {
         process.exit(1)
     }
 
-    return session({
+    app.use(session({
         secret: sessionSecret,
         resave: false,
         saveUninitialized: false,
-        store: MongoStore.create({ mongoUrl })
-    })
+        store: MongoStore.create({ mongoUrl }),
+    }));
 }
 
 export default sessionConfig

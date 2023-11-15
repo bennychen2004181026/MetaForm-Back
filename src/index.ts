@@ -19,17 +19,17 @@ import middlewares from '@middleware/index';
 const app = express();
 app.use(express.json());
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev', morganOption));
-app.use(sessionConfig)
+sessionConfig(app)
 app.use(passport.initialize());
 app.use(passport.session())
 
 app.use('/', router);
+app.use(middlewares.errorHandler);
 app.use(ValidationError);
 app.use(NotFoundError);
 app.use(CastError);
 app.use(UnknownError);
 
-app.use(middlewares.errorHandler);
 const { PORT } = process.env;
 connectToDB().then(() => {
     app.listen(PORT, () => {

@@ -1,4 +1,4 @@
-import express,{ Request,Response,NextFunction } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import passport from 'passport';
 import routeValidators from '@middleware/routeValidators/users';
 import userRouteMiddlewares from '@middleware/usersRoute'
@@ -53,20 +53,24 @@ userRouter.post('/resetPassword',
     userControllers.resetPassword
 )
 
-userRouter.get('/auth/google',(req:Request, res:Response, next:NextFunction) => {
+userRouter.get('/auth/google', (req: Request, res: Response, next: NextFunction) => {
     logger.info("Initiating authentication with Google.");
     next();
-  }, passport.authenticate('google', { scope: ['profile', 'email'] }))
+}, passport.authenticate('google', { scope: ['profile', 'email'] }))
 
-  userRouter.get('/auth/google/callback', 
-  passport.authenticate('google', { failureRedirect: '/users/login' }),
-  (req:Request, res:Response, next:NextFunction) => {
-    logger.info("Google authentication successful, user:", req.user);
-    res.redirect('/dashboard');
-  },
-  (error: Error, req:Request, res:Response, next:NextFunction) => {
-    logger.info("Error in Google authentication:", error);
-    res.redirect('/users/login');
-  }
+userRouter.get('/auth/google/callback',
+    passport.authenticate('google', { failureRedirect: '/users/login' }),
+    (req: Request, res: Response, next: NextFunction): void => {
+        res.locals.user = req.user
+        next()
+    },
+    userRouteMiddlewares.generateToken,
+    userRouteMiddlewares.sendTokenAndUser,
+    (req: Request, res: Response, next: NextFunction): void => {
+        res.redirect('/users/login');
+    },
+    (error: Error, req: Request, res: Response, next: NextFunction): void => {
+        res.redirect('/users/login');
+    }
 );
-export default userRouter;
+export default userRouter
