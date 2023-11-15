@@ -16,13 +16,28 @@ const sendVerificationEmail: RequestHandler = async (req: Request, res: Response
     try {
         const { email, username } = req.body;
 
-        if (!process.env.JWT_SECRET || !process.env.PORT || !process.env.EMAIL_USERNAME || !process.env.SENDGRID_API_KEY) {
+        const {
+            NODE_ENV,
+            JWT_SECRET,
+            PORT,
+            EMAIL_USERNAME,
+            SENDGRID_API_KEY
+        } = process.env
+
+        if (!NODE_ENV || !JWT_SECRET || !PORT || !EMAIL_USERNAME || !SENDGRID_API_KEY) {
             throw new Errors.EnvironmentError('Missing environment variables', 'env');
         }
 
-        const verificationToken: string = jwt.sign({ email, username }, process.env.JWT_SECRET, { expiresIn: '10m' });
+        const verificationToken = jwt.sign({ email, username }, JWT_SECRET, { expiresIn: '10m' });
 
-        const verificationLink: string = `http://localhost:${process.env.PORT}/users/verify-token/${verificationToken}`;
+        let verificationLink: string;
+        if (NODE_ENV === 'production') {
+            verificationLink = `http://localhost:${process.env.PORT}/users/verification/${verificationToken}`;
+        } else if (NODE_ENV === 'test') {
+            verificationLink = `http://localhost:${process.env.PORT}/users/verification/${verificationToken}`;
+        } else {
+            verificationLink = `http://localhost:${process.env.PORT}/users/verification/${verificationToken}`;
+        }
 
         const emailContent = emailTemplates.verification(verificationLink);
 
@@ -190,16 +205,30 @@ const login: RequestHandler = async (req: Request, res: Response, next: NextFunc
     }
 };
 
-const forgotPassword = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+const forgotPassword: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    const {
+        NODE_ENV,
+        JWT_SECRET,
+        PORT,
+        EMAIL_USERNAME,
+        SENDGRID_API_KEY
+    } = process.env
 
-    if (!process.env.PORT || !process.env.EMAIL_USERNAME || !process.env.SENDGRID_API_KEY) {
+    if (!NODE_ENV || !JWT_SECRET || PORT || EMAIL_USERNAME || SENDGRID_API_KEY) {
         return next(new Errors.EnvironmentError('Missing environment variables', 'env'));
     }
 
     const resetToken: string = crypto.randomBytes(32).toString('hex');
     const passwordExpires: Date = new Date(Date.now() + 600000);
 
-    const verificationLink = `http://localhost:${process.env.PORT}/users/resetPassword?token=${resetToken}`;
+    let resetLink: string;
+    if (NODE_ENV === 'production') {
+        resetLink = `http://localhost:${process.env.PORT}/users/resetPassword/${resetToken}`;
+    } else if (NODE_ENV === 'test') {
+        resetLink = `http://localhost:${process.env.PORT}/users/resetPassword/${resetToken}`;
+    } else {
+        resetLink = `http://localhost:${process.env.PORT}/users/resetPassword/${resetToken}`;
+    }
 
     try {
         const { email } = req.body;
@@ -215,7 +244,7 @@ const forgotPassword = async (req: Request, res: Response, next: NextFunction): 
             { $set: { passwordResetToken: resetToken, passwordResetExpires: passwordExpires } },
         )
 
-        const emailContent: string = emailTemplates.resetPassword(verificationLink);
+        const emailContent: string = emailTemplates.resetPassword(resetLink);
 
         const isEmailSent: boolean = await sendEmail({ to: email, subject: 'Reset Password', html: emailContent });
 
@@ -231,7 +260,7 @@ const forgotPassword = async (req: Request, res: Response, next: NextFunction): 
     }
 }
 
-const resetPassword = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+const resetPassword: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     const { token, password } = req.body
 
     try {
