@@ -33,7 +33,7 @@ const sendVerificationEmail: RequestHandler = async (req: Request, res: Response
 
         const emailContent = emailTemplates.verification(verificationLink);
 
-        const isEmailSent = await sendEmail({ to: email, subject: 'Verify your email', html: emailContent });
+        const isEmailSent: boolean = await sendEmail({ to: email, subject: 'Verify your email', html: emailContent });
 
         if (!isEmailSent) {
             throw new Errors.BusinessLogicError('Failed to send verification email');
@@ -42,7 +42,7 @@ const sendVerificationEmail: RequestHandler = async (req: Request, res: Response
         return res.
             status(200).
             json({ message: `Verification email has been sent to ${email}. Please check your email.` });
-    } catch (error) {
+    } catch (error: unknown) {
         next(error);
     }
 };
