@@ -73,7 +73,7 @@ const addCompany: RequestHandler = async (req: Request, res: Response) => {
       });
       res.status(201).json(company);
     } else {
-      res.status(404).json({ error: 'Company abn already exists' });
+      res.status(400).json({ error: 'Company abn already exists' });
     }
   } catch (error) {
     res.status(400).json((error as Error).message);
