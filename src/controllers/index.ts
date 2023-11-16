@@ -6,7 +6,6 @@ import {
     deleteCompanyById,
 } from './company.controller';
 import {
-    
     createForm,
     getFormById,
     updateFormById,
@@ -35,7 +34,6 @@ export default {
     deleteQuestionFromForm,
     deleteResponseFromForm,
     getAllFormsByUserId,
-
     userController,
     authController,
 };
