@@ -27,7 +27,6 @@ const questionSchema = new Schema({
     ],
     mandatory: {
         type: Boolean,
-        default: true,
     },
     createAt: {
         type: Date,

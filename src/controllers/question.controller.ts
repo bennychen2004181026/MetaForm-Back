@@ -24,11 +24,11 @@ const getQuestionById: RequestHandler = async (req: Request, res: Response) => {
 
 const createQuestion: RequestHandler = async (req: Request, res: Response) => {
     try {
-        const { text, type, options, mandatory } = req.body;
-        if (!text || !type || !options || !mandatory) {
+        const { text, type, options } = req.body;
+        if (!text || !type || !options) {
             return res.status(400).json({ error: 'Please enter all required fields!' });
         }
-        const newQuestion = new Question({ text, type, options, mandatory });
+        const newQuestion = new Question({ text, type, options });
         await newQuestion.save();
         return res.status(201).json({ message: 'Question created successfully' });
     } catch (error) {
@@ -39,13 +39,13 @@ const createQuestion: RequestHandler = async (req: Request, res: Response) => {
 const updateQuestionById = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const { text, type, options, mandatory } = req.body;
-        if (!text || !type || !options || !mandatory) {
+        const { text, type, options } = req.body;
+        if (!text || !type || !options) {
             return res.status(400).json({ error: 'Please enter all required fields!' });
         }
         const question = await Question.findByIdAndUpdate(
             id,
-            { text, type, options, mandatory },
+            { text, type, options },
             { new: true },
         ).exec();
         if (!question) {
