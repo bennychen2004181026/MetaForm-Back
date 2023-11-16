@@ -17,10 +17,12 @@
             "@models/*": ["src/models/*"],
             "@middleware/*": ["src/middlewares/*"],
             "@routes/*": ["src/routes/*"],
+            "@utils/*": ["src/utils/*"],
             "@controllers/*": ["src/controllers/*"],
             "@config/*": ["src/config/*"],
             "@database/*": ["src/database/*"],
-            "@types/*": ["src/types/*"],
+            "@validators/*": ["src/validators/*"],
+            "@interfaces/*": ["src/interfaces/*"],
             "@errors/*": ["src/middlewares/errors/*"]
         },
         "strict": true
