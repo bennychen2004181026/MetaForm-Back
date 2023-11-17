@@ -5,8 +5,8 @@ import { sendEmail, emailTemplates } from '@utils/emailService';
 import Errors from '@errors/ClassError'
 import User from '@models/user.model';
 import Company from '@models/company.model';
-import { IUser } from '@customizesTypes/users';
-import { ICompany } from '@customizesTypes/companies';
+import { IUser } from 'src/interfaces/users';
+import { ICompany } from 'src/interfaces/companies';
 
 const sendVerificationEmail: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
@@ -148,8 +148,8 @@ const completeAccount = async (req: Request, res: Response, next: NextFunction):
 
         user.isAccountComplete = true;
         user.isActive = true;
-        const updatedUser:IUser = await user.save();
-        const userJson:IUser = updatedUser.toJSON();
+        const updatedUser: IUser = await user.save();
+        const userJson: IUser = updatedUser.toJSON();
 
         await session.commitTransaction();
         session.endSession();

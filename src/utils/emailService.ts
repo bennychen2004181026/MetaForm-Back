@@ -1,15 +1,15 @@
 import nodemailer from 'nodemailer'
-import EmailOptions from '@customizesTypes/EmailOptions'
+import EmailOptions from 'src/interfaces/EmailOptions'
 import logger from '@config/utils/winston';
 
 const transporter = nodemailer.createTransport({
     host: 'smtp.sendgrid.net',
     port: 587,
     auth: {
-      user: 'apikey', 
-      pass: process.env.SENDGRID_API_KEY
+        user: 'apikey',
+        pass: process.env.SENDGRID_API_KEY
     }
-  });
+});
 
 const emailTemplates = {
     verification: (verificationLink: string): string => `
@@ -35,7 +35,7 @@ const sendEmail = async (options: EmailOptions): Promise<boolean> => {
         subject: options.subject,
         html: options.html
     }
-logger.info(mailOptions.to)
+    logger.info(mailOptions.to)
     try {
         await transporter.sendMail(mailOptions);
         return true;
