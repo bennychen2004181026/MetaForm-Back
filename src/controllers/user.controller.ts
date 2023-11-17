@@ -4,13 +4,9 @@ import mongoose from 'mongoose';
 import { sendEmail, emailTemplates } from '@utils/emailService';
 import Errors from '@errors/ClassError'
 import User from '@models/user.model';
-<<<<<<< HEAD
 import Company from '@models/company.model';
 import { IUser } from '@interfaces/users';
 import { ICompany } from '@interfaces/companies';
-=======
-import { IUser } from '@interfaces/users';
->>>>>>> MET-33-feature-create-account-api
 
 const sendVerificationEmail: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
