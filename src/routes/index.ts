@@ -1,8 +1,8 @@
 import Router from 'express';
-import formRouter from './form.route';
-import responseRouter from './response.route';
 import userRouter from '@routes/user.route'
 import companyRouter from './company.route';
+import formRouter from './form.route';
+import responseRouter from './response.route';
 
 const router = Router();
 router.use('/companies', companyRouter);

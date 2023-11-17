@@ -1,6 +1,6 @@
-import verifyToken from './user.verifyToken'
-import sendTokenAndUser from './user.sendTokenAndUser'
-import generateToken from './user.generateToken'
+import verifyToken from './verifyToken'
+import sendTokenAndUser from './sendTokenAndUser'
+import generateToken from './generateToken'
 
 export default {
     verifyToken,
