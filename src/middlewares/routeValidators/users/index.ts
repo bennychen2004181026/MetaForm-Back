@@ -1,10 +1,10 @@
-import emailValidator from '@middleware/routeValidators/users/user.emailValidator'
-import checkUserExistence from '@middleware/routeValidators/users/user.checkUserExistence'
-import userInfosValidator from '@middleware/routeValidators/users/user.userInfosValidator'
-import completeAccountValidator from '@middleware/routeValidators/users/user.completeAccountValidator'
-import loginValidator from '@middleware/routeValidators/users/user.loginValidator'
-import forgotPasswordValidator from '@middleware/routeValidators/users/user.forgotPasswordValidator'
-import resetPasswordValidator from '@middleware/routeValidators/users/user.resetPasswordValidator'
+import forgotPasswordValidator from '@middleware/routeValidators/users/forgotPasswordValidator'
+import loginValidator from '@middleware/routeValidators/users/loginValidator'
+import emailValidator from '@middleware/routeValidators/users/emailValidator'
+import checkUserExistence from '@middleware/routeValidators/users/checkUserExistence'
+import userInfosValidator from '@middleware/routeValidators/users/userInfosValidator'
+import completeAccountValidator from '@middleware/routeValidators/users/completeAccountValidator'
+import resetPasswordValidator from '@middleware/routeValidators/users/resetPasswordValidator'
 
 export default {
     checkUserExistence,
