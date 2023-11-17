@@ -5,8 +5,8 @@ import { sendEmail, emailTemplates } from '@utils/emailService';
 import Errors from '@errors/ClassError'
 import User from '@models/user.model';
 import Company from '@models/company.model';
-import { IUser } from 'src/interfaces/users';
-import { ICompany } from 'src/interfaces/companies';
+import { IUser } from '@interfaces/users';
+import { ICompany } from '@interfaces/companies';
 
 const sendVerificationEmail: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {

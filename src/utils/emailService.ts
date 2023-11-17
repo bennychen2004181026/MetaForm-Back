@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer'
-import EmailOptions from 'src/interfaces/EmailOptions'
+import EmailOptions from '@interfaces/EmailOptions'
 import logger from '@config/utils/winston';
 
 const transporter = nodemailer.createTransport({
