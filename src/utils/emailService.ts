@@ -1,14 +1,7 @@
-import nodemailer from 'nodemailer'
-import EmailOptions from '@customizesTypes/EmailOptions'
+import sgMail from '@sendgrid/mail';
+import EmailOptions from '@interfaces/EmailOptions';
 
-const transporter = nodemailer.createTransport({
-    host: 'smtp.sendgrid.net',
-    port: 587,
-    auth: {
-        user: 'apikey',
-        pass: process.env.SENDGRID_API_KEY
-    }
-});
+sgMail.setApiKey(process.env.SENDGRID_API_KEY as string);
 
 const emailTemplates = {
     verification: (verificationLink: string): string => `
@@ -42,22 +35,22 @@ const emailTemplates = {
 };
 
 const sendEmail = async (options: EmailOptions): Promise<boolean> => {
-    const mailOptions = {
-        from: process.env.EMAIL_USERNAME,
+    const msg = {
         to: options.to,
+        from: process.env.EMAIL_USERNAME as string,
         subject: options.subject,
-        html: options.html
-    }
+        html: options.html,
+    };
 
     try {
-        await transporter.sendMail(mailOptions);
+        await sgMail.send(msg);
         return true;
     } catch (error) {
-        return false
+        return false;
     }
-}
+};
 
 export {
     emailTemplates,
     sendEmail
-}
+};
