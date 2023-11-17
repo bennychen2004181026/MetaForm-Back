@@ -1,6 +1,5 @@
 import sgMail from '@sendgrid/mail';
 import EmailOptions from '@interfaces/EmailOptions';
-import logger from '@config/utils/winston';
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY as string);
 
@@ -33,7 +32,6 @@ const sendEmail = async (options: EmailOptions): Promise<boolean> => {
         await sgMail.send(msg);
         return true;
     } catch (error) {
-        logger.error(error);
         return false;
     }
 };
