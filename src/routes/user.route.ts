@@ -4,7 +4,7 @@ import routeValidators from '@middleware/routeValidators/users';
 import userRouteMiddlewares from '@middleware/usersRoute'
 import userControllers from '@controllers/user.controller';
 import middlewares from '@middleware/index';
-import { IUser } from '@customizesTypes/users'
+import { IUser } from '@interfaces/users'
 
 const userRouter = express.Router();
 

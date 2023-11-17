@@ -1,7 +1,7 @@
 import passport from 'passport';
 import passportGoogle, { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import User from '@models/user.model';
-import { IUser,PassportUser } from '@customizesTypes/users'
+import { IUser, PassportUser } from '@interfaces/users'
 
 const clientID = process.env.GOOGLE_CLIENT_ID || '';
 const clientSecret = process.env.GOOGLE_CLIENT_SECRET || '';

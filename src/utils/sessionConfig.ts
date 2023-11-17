@@ -1,7 +1,7 @@
 import express from 'express';
 import session from 'express-session';
 import MongoStore from 'connect-mongo';
-import EnvConfig from '@customizesTypes/EnvConfig'
+import EnvConfig from '@interfaces/EnvConfig'
 import logger from '@config/utils/winston';
 
 const sessionConfig = (app: express.Application): void => {
