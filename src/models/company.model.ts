@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose';
-import { ICompany } from '@customizesTypes/companies';
+import { ICompany } from '@interfaces/companies';
 
 const CompanySchema: Schema = new Schema({
     companyName: {
@@ -16,7 +16,7 @@ const CompanySchema: Schema = new Schema({
     logo: {
         type: String,
     },
-    
+
     industry: {
         type: String,
         required: true,
@@ -28,9 +28,9 @@ const CompanySchema: Schema = new Schema({
         required: true,
     },
 
-    employees: { 
-        type: [Schema.Types.ObjectId], 
-        ref: 'User' 
+    employees: {
+        type: [Schema.Types.ObjectId],
+        ref: 'User'
     },
 });
 

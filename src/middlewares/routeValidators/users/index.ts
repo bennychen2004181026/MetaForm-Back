@@ -1,8 +1,8 @@
-import emailValidator from '@middleware/routeValidators/users/user.emailValidator'
-import checkUserExistence from '@middleware/routeValidators/users/user.checkUserExistence'
-import userInfosValidator from '@middleware/routeValidators/users/user.userInfosValidator'
-import completeAccountValidator from '@middleware/routeValidators/users/user.completeAccountValidator'
-import loginValidator from '@middleware/routeValidators/users/user.loginValidator'
+import loginValidator from '@middleware/routeValidators/users/loginValidator'
+import emailValidator from '@middleware/routeValidators/users/emailValidator'
+import checkUserExistence from '@middleware/routeValidators/users/checkUserExistence'
+import userInfosValidator from '@middleware/routeValidators/users/userInfosValidator'
+import completeAccountValidator from '@middleware/routeValidators/users/completeAccountValidator'
 
 export default {
     checkUserExistence,

@@ -7,8 +7,8 @@ import { sendEmail, emailTemplates } from '@utils/emailService';
 import Errors from '@errors/ClassError'
 import User from '@models/user.model';
 import Company from '@models/company.model';
-import { IUser } from '@customizesTypes/users';
-import { ICompany } from '@customizesTypes/companies';
+import { IUser } from '@interfaces/users';
+import { ICompany } from '@interfaces/companies';
 import { generateTokenHelper } from '@utils/jwt'
 
 const sendVerificationEmail: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {

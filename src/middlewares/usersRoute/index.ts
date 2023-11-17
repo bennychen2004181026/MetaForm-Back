@@ -1,9 +1,9 @@
-import verifyToken from './user.verifyToken'
-import sendTokenAndUser from './user.sendTokenAndUser'
-import generateToken from './user.generateToken'
-import verifyUserId from './user.verifyUserId'
-import verifyHeaderToken from './user.verifyHeaderToken'
-import checkAccountCompletion from './user.checkAccountCompletion'
+import verifyToken from './verifyToken'
+import sendTokenAndUser from './sendTokenAndUser'
+import generateToken from './generateToken'
+import verifyUserId from './verifyUserId'
+import verifyHeaderToken from './verifyHeaderToken'
+import checkAccountCompletion from './checkAccountCompletion'
 
 export default {
     verifyToken,
