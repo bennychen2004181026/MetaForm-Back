@@ -5,7 +5,17 @@ import {
     updateCompanyById,
     deleteCompanyById,
 } from './company.controller';
-import staffController from './staff.controller';
+import {
+    createForm,
+    getFormById,
+    updateFormById,
+    deleteFormById,
+    addResponseToForm,
+    addQuestionToForm,
+    deleteQuestionFromForm,
+    deleteResponseFromForm,
+    getAllFormsByUserId,
+} from './form.controller';
 import authController from './auth.controller';
 import userController from './user.controller';
 import {
@@ -27,7 +37,15 @@ export default {
     createQuestion,
     updateQuestionById,
     deleteQuestionById,
-    staffController,
+    createForm,
+    getFormById,
+    updateFormById,
+    deleteFormById,
+    addResponseToForm,
+    addQuestionToForm,
+    deleteQuestionFromForm,
+    deleteResponseFromForm,
+    getAllFormsByUserId,
     userController,
     authController,
 };

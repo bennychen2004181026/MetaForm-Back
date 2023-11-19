@@ -1,4 +1,19 @@
 import express from 'express';
+import routeValidators from '@middleware/routeValidators/users';
+import userRouteMiddlewares from '@middleware/usersRoute'
+import userControllers from '@controllers/user.controller';
 
-const router = express.Router();
-export default router;
+const userRouter = express.Router();
+
+userRouter.post('/verify-email',
+    routeValidators.emailValidator,
+    routeValidators.checkUserExistence,
+    userControllers.sendVerificationEmail
+);
+
+userRouter.get('/verification/:token',
+    userRouteMiddlewares.verifyToken,
+    userControllers.prepareAccountCreation
+)
+
+export default userRouter;
