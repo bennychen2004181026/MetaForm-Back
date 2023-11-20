@@ -6,6 +6,7 @@ import {
   updateCompanyById,
   deleteCompanyById,
 } from '@controllers/company.controller';
+
 const router = Router();
 router.get('/', getAllCompanies);
 router.get('/:id', getCompanyById);
