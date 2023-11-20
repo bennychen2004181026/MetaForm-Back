@@ -264,7 +264,6 @@ const updateCompanyById: RequestHandler = async (req: Request, res: Response) =>
 
 /*
  * delete function is not implemented as it won't be applicable for companies
- * isActive will be set to false if a company is not used/does not exist anymore
  */
 
 export { addCompany, getCompanyById, getAllCompanies, updateCompanyById };
