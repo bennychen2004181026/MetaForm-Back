@@ -5,24 +5,22 @@ import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 
 import { sendEmail, emailTemplates } from '@utils/emailService';
-import Errors from '@errors/ClassError'
+import Errors from '@errors/ClassError';
 import User from '@models/user.model';
 import Company from '@models/company.model';
 import { IUser } from '@interfaces/users';
 import { ICompany } from '@interfaces/companies';
-import { generateTokenHelper } from '@utils/jwt'
+import { generateTokenHelper } from '@utils/jwt';
 
-const sendVerificationEmail: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+const sendVerificationEmail: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
     try {
         const { email, username } = req.body;
 
-        const {
-            NODE_ENV,
-            JWT_SECRET,
-            PORT,
-            EMAIL_USERNAME,
-            SENDGRID_API_KEY
-        } = process.env
+        const { NODE_ENV, JWT_SECRET, PORT, EMAIL_USERNAME, SENDGRID_API_KEY } = process.env;
 
         if (!NODE_ENV || !JWT_SECRET || !PORT || !EMAIL_USERNAME || !SENDGRID_API_KEY) {
             throw new Errors.EnvironmentError('Missing environment variables', 'env');
@@ -41,48 +39,60 @@ const sendVerificationEmail: RequestHandler = async (req: Request, res: Response
 
         const emailContent = emailTemplates.verification(verificationLink);
 
-        const isEmailSent: boolean = await sendEmail({ to: email, subject: 'Verify your email', html: emailContent });
+        const isEmailSent: boolean = await sendEmail({
+            to: email,
+            subject: 'Verify your email',
+            html: emailContent,
+        });
 
         if (!isEmailSent) {
             throw new Errors.BusinessLogicError('Failed to send verification email');
         }
 
-        return res.
-            status(200).
-            json({ message: `Verification email has been sent to ${email}. Please check your email.` });
+        return res.status(200).json({
+            message: `Verification email has been sent to ${email}. Please check your email.`,
+        });
     } catch (error: unknown) {
         next(error);
     }
 };
 
-const prepareAccountCreation: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+const prepareAccountCreation: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
     try {
         const { username, email } = res.locals.decoded;
 
         if (!username || !email) {
-            throw new Errors.ValidationError('Username or email not provided', 'token')
+            throw new Errors.ValidationError('Username or email not provided', 'token');
         }
 
-        const userExists = await User.findOne({ $or: [{ email }, { username }] })
+        const userExists = await User.findOne({ $or: [{ email }, { username }] });
 
         if (userExists) {
-            throw new Errors.DatabaseError('Email or username already in use', 'user')
+            throw new Errors.DatabaseError('Email or username already in use', 'user');
         }
 
-        res.status(200).json({ email, username })
+        res.status(200).json({ email, username });
     } catch (error: unknown) {
-        next(error)
+        next(error);
     }
-}
+};
 
-const createAccount: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+const createAccount: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
     try {
-        const { email, username, firstName, lastName, password } = req.body
+        const { email, username, firstName, lastName, password } = req.body;
 
-        const existingUser = await User.findOne({ $or: [{ email }, { username }] })
+        const existingUser = await User.findOne({ $or: [{ email }, { username }] });
 
         if (existingUser) {
-            throw new Errors.ValidationError('Email or username already in use', 'email/username')
+            throw new Errors.ValidationError('Email or username already in use', 'email/username');
         }
 
         const partialProperties: Partial<IUser> = {
@@ -91,7 +101,7 @@ const createAccount: RequestHandler = async (req: Request, res: Response, next: 
             lastName,
             email,
             password,
-            role: "super_admin",
+            role: 'super_admin',
             isAccountComplete: false,
             isActive: false,
         };
@@ -104,11 +114,15 @@ const createAccount: RequestHandler = async (req: Request, res: Response, next: 
         res.locals.user = savedUser;
         next();
     } catch (error: unknown) {
-        next(error)
+        next(error);
     }
-}
+};
 
-const completeAccount: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+const completeAccount: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
     let session: mongoose.ClientSession | null = null;
     try {
         session = await mongoose.startSession();
@@ -116,29 +130,27 @@ const completeAccount: RequestHandler = async (req: Request, res: Response, next
 
         const { userId } = res.locals;
 
-        if (!userId || userId.trim() === '') {
+        if (!userId || userId.trim().length === 0) {
             throw new Errors.NotFoundError('User not found', 'userId');
         }
 
-        const user = await User.findById(userId).exec()
+        const user = await User.findById(userId).exec();
 
         if (!user) {
-            throw new Errors.NotFoundError('User not found in the database', 'user not found in database');
+            throw new Errors.NotFoundError(
+                'User not found in the database',
+                'user not found in database',
+            );
         }
 
-        const {
-            companyName,
-            abn,
-            logo,
-            industry,
-        } = req.body;
+        const { companyName, abn, logo, industry } = req.body;
 
         const partialProperties: Partial<ICompany> = {
             companyName,
             abn,
             logo,
             industry,
-        }
+        };
 
         const companyInfo: ICompany = new Company({
             ...partialProperties,
@@ -160,10 +172,9 @@ const completeAccount: RequestHandler = async (req: Request, res: Response, next
         return res.status(201).json({
             message: 'Successfully bound the company to the user account.Complete account setting',
             updatedCompany,
-            userJson
+            userJson,
         });
-    }
-    catch (error: unknown) {
+    } catch (error: unknown) {
         if (session) {
             await session.abortTransaction();
             session.endSession();
@@ -172,12 +183,19 @@ const completeAccount: RequestHandler = async (req: Request, res: Response, next
     }
 };
 
-const login: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+const login: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
     try {
         const { email, password } = req.body;
 
         if (!email || !password) {
-            throw new Errors.ValidationError('Email and password are required for login', 'should provide password and mail');
+            throw new Errors.ValidationError(
+                'Email and password are required for login',
+                'should provide password and mail',
+            );
         }
 
         const user: IUser | null = await User.findOne({ email }).select('+password').exec();
@@ -197,22 +215,19 @@ const login: RequestHandler = async (req: Request, res: Response, next: NextFunc
         return res.status(200).json({
             message: 'Logged in successfully',
             token,
-            user
+            user,
         });
-    }
-    catch (error: unknown) {
+    } catch (error: unknown) {
         return next(error);
     }
 };
 
-const forgotPassword: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
-    const {
-        NODE_ENV,
-        JWT_SECRET,
-        PORT,
-        EMAIL_USERNAME,
-        SENDGRID_API_KEY
-    } = process.env
+const forgotPassword: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
+    const { NODE_ENV, JWT_SECRET, PORT, EMAIL_USERNAME, SENDGRID_API_KEY } = process.env;
 
     if (!NODE_ENV || !JWT_SECRET || PORT || EMAIL_USERNAME || SENDGRID_API_KEY) {
         return next(new Errors.EnvironmentError('Missing environment variables', 'env'));
@@ -233,44 +248,54 @@ const forgotPassword: RequestHandler = async (req: Request, res: Response, next:
     try {
         const { email } = req.body;
 
-        const user: IUser | null = await User.findOne({ email })
+        const user: IUser | null = await User.findOne({ email });
         if (!user) {
-            return res.status(200).json({ message: 'If your email is registered with us, you will receive a password reset email.' })
+            return res.status(200).json({
+                message:
+                    'If your email is registered with us, you will receive a password reset email.',
+            });
         }
-
 
         await User.findOneAndUpdate(
             { email: user.email },
             { $set: { passwordResetToken: resetToken, passwordResetExpires: passwordExpires } },
-        )
+        );
 
         const emailContent: string = emailTemplates.resetPassword(resetLink);
 
-        const isEmailSent: boolean = await sendEmail({ to: email, subject: 'Reset Password', html: emailContent });
+        const isEmailSent: boolean = await sendEmail({
+            to: email,
+            subject: 'Reset Password',
+            html: emailContent,
+        });
 
         if (!isEmailSent) {
             throw new Errors.BusinessLogicError('Failed to send resetPassword email');
         }
 
-        return res.
-            status(200).
-            json({ message: `ResetPassword email has been sent to ${email}. Please check your email.` });
+        return res.status(200).json({
+            message: `ResetPassword email has been sent to ${email}. Please check your email.`,
+        });
     } catch (error: unknown) {
-        next(error)
+        next(error);
     }
-}
+};
 
-const resetPassword: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
-    const { token, password } = req.body
+const resetPassword: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
+    const { token, password } = req.body;
 
     try {
         const user = await User.findOne({
             passwordResetToken: token,
-            passwordResetExpires: { $gt: Date.now() }
+            passwordResetExpires: { $gt: Date.now() },
         }).select('+password');
 
         if (!user) {
-            throw new Errors.ValidationError('Invalid or expired password reset token.', 'Token')
+            throw new Errors.ValidationError('Invalid or expired password reset token.', 'Token');
         }
         user.password = password;
         user.passwordResetToken = undefined;
@@ -279,9 +304,9 @@ const resetPassword: RequestHandler = async (req: Request, res: Response, next: 
         await user.save();
         res.status(200).json({ message: 'Your password has been successfully reset.' });
     } catch (error) {
-        next(error)
+        next(error);
     }
-}
+};
 
 export default {
     sendVerificationEmail,
@@ -290,5 +315,5 @@ export default {
     completeAccount,
     login,
     forgotPassword,
-    resetPassword
-}
+    resetPassword,
+};
