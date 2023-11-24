@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { sendEmail, emailTemplates } from '@utils/emailService';
 import Errors from '@errors/ClassError'
 import User from '@models/user.model';
+import { IUser } from '@interfaces/users';
 
 const sendVerificationEmail: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
@@ -67,7 +68,41 @@ const prepareAccountCreation: RequestHandler = async (req: Request, res: Respons
     }
 }
 
+const createAccount: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    try {
+        const { email, username, firstName, lastName, password } = req.body
+
+        const existingUser = await User.findOne({ $or: [{ email }, { username }] })
+
+        if (existingUser) {
+            throw new Errors.ValidationError('Email or username already in use', 'email/username')
+        }
+
+        const partialProperties: Partial<IUser> = {
+            username,
+            firstName,
+            lastName,
+            email,
+            password,
+            role: "super_admin",
+            isAccountComplete: false,
+            isActive: false,
+        };
+
+        const newUser: IUser = new User(partialProperties);
+        const savedUser = await newUser.save();
+
+        savedUser.toJSON();
+
+        res.locals.user = savedUser;
+        next();
+    } catch (error) {
+        next(error)
+    }
+}
+
 export default {
     sendVerificationEmail,
-    prepareAccountCreation
+    prepareAccountCreation,
+    createAccount
 }

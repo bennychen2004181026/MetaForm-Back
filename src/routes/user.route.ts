@@ -16,4 +16,11 @@ userRouter.get('/verification/:token',
     userControllers.prepareAccountCreation
 )
 
+userRouter.post('/create-account',
+routeValidators.userInfosValidator,
+userControllers.createAccount,
+userRouteMiddlewares.generateToken,
+userRouteMiddlewares.sendTokenAndUser
+)
+
 export default userRouter;

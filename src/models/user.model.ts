@@ -1,5 +1,7 @@
-import mongoose, { Schema } from 'mongoose';
+import bcrypt from 'bcrypt';
+import mongoose, { CallbackWithoutResultAndOptionalError, Schema } from 'mongoose';
 import { MembershipType, Role, IUser } from '@interfaces/users';
+import Errors from '@errors/ClassError'
 
 const UserSchema: Schema = new Schema(
     {
@@ -106,6 +108,30 @@ const UserSchema: Schema = new Schema(
         timestamps: true, // Enables automatic timestamps (createdAt, updatedAt)
     }
 );
+
+UserSchema.pre('save', async function (next: CallbackWithoutResultAndOptionalError) {
+    if (this.isModified('password') || this.isNew) {
+        try {
+            const saltRounds = 10;
+            const salt = await bcrypt.genSalt(saltRounds);
+            const hash = await bcrypt.hash(this.password, salt);
+            this.password = hash;
+            next();
+        }
+        catch (err: unknown) {
+            if (err instanceof Error) {
+                return next(new Errors.DatabaseError('An error occurred while hashing the password', 'Database'));
+            }
+            return next(new Errors.DatabaseError('An unknown error occurred while hashing the password', 'Database'));
+        }
+    }
+});
+
+UserSchema.methods.toJSON = function () {
+    const obj = this.toObject();
+    delete obj.password;
+    return obj;
+};
 
 const User = mongoose.model<IUser>('User', UserSchema);
 
