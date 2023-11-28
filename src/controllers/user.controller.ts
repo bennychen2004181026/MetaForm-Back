@@ -297,11 +297,16 @@ const resetPassword: RequestHandler = async (
         if (!user) {
             throw new Errors.ValidationError('Invalid or expired password reset token.', 'Token');
         }
-        user.password = password;
-        user.passwordResetToken = undefined;
-        user.passwordResetExpires = undefined;
-
-        await user.save();
+        await User.updateOne(
+            { _id: user._id },
+            {
+                $set: { password },
+                $unset: {
+                    passwordResetToken: '',
+                    passwordResetExpires: '',
+                },
+            },
+        );
         res.status(200).json({ message: 'Your password has been successfully reset.' });
     } catch (error) {
         next(error);
