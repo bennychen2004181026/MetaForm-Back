@@ -229,7 +229,7 @@ const forgotPassword: RequestHandler = async (
 ): Promise<Response | void> => {
     const { NODE_ENV, JWT_SECRET, PORT, EMAIL_USERNAME, SENDGRID_API_KEY } = process.env;
 
-    if (!NODE_ENV || !JWT_SECRET || PORT || EMAIL_USERNAME || SENDGRID_API_KEY) {
+    if (!NODE_ENV || !JWT_SECRET || !PORT || !EMAIL_USERNAME || !SENDGRID_API_KEY) {
         return next(new Errors.EnvironmentError('Missing environment variables', 'env'));
     }
 
@@ -250,12 +250,10 @@ const forgotPassword: RequestHandler = async (
 
         const user: IUser | null = await User.findOne({ email });
         if (!user) {
-            return res
-                .status(200)
-                .json({
-                    message:
-                        'If your email is registered with us, you will receive a password reset email.',
-                });
+            return res.status(200).json({
+                message:
+                    'If your email is registered with us, you will receive a password reset email.',
+            });
         }
 
         await User.findOneAndUpdate(
@@ -275,11 +273,9 @@ const forgotPassword: RequestHandler = async (
             throw new Errors.BusinessLogicError('Failed to send resetPassword email');
         }
 
-        return res
-            .status(200)
-            .json({
-                message: `ResetPassword email has been sent to ${email}. Please check your email.`,
-            });
+        return res.status(200).json({
+            message: `ResetPassword email has been sent to ${email}. Please check your email.`,
+        });
     } catch (error: unknown) {
         next(error);
     }
