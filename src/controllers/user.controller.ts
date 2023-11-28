@@ -229,7 +229,7 @@ const forgotPassword: RequestHandler = async (
 ): Promise<Response | void> => {
     const { NODE_ENV, JWT_SECRET, PORT, EMAIL_USERNAME, SENDGRID_API_KEY } = process.env;
 
-    if (!NODE_ENV || !JWT_SECRET || PORT || EMAIL_USERNAME || SENDGRID_API_KEY) {
+    if (!NODE_ENV || !JWT_SECRET || !PORT || !EMAIL_USERNAME || !SENDGRID_API_KEY) {
         return next(new Errors.EnvironmentError('Missing environment variables', 'env'));
     }
 
