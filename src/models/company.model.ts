@@ -19,7 +19,6 @@ const CompanySchema: Schema = new Schema({
 
     description: {
         type: String,
-        required: true,
     },
 
     industry: {
