@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose';
-import { ICompany } from '@interfaces/companies';
+import { ICompany } from '@interfaces/company';
 
 const CompanySchema: Schema = new Schema({
     companyName: {
@@ -17,26 +17,32 @@ const CompanySchema: Schema = new Schema({
         type: String,
     },
 
-    industry: {
+    description: {
         type: String,
+    },
+
+    industry: {
+        type: [String],
         required: true,
     },
 
     isActive: {
         type: Boolean,
-        default: false,
+        default: true,
         required: true,
     },
 
     employees: {
         type: [Schema.Types.ObjectId],
-        ref: 'User'
+        ref: 'User',
+    },
+
+    address: {
+        type: String,
     },
 });
 
-
-CompanySchema.pre('save', async (next) => {
-
+CompanySchema.pre('save', async next => {
     next();
 });
 
