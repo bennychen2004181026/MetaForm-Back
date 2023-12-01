@@ -3,7 +3,6 @@ import {
     getCompanyById,
     getAllCompanies,
     updateCompanyById,
-    deleteCompanyById,
 } from './company.controller';
 import {
     createForm,
@@ -31,12 +30,6 @@ export default {
     getCompanyById,
     getAllCompanies,
     updateCompanyById,
-    deleteCompanyById,
-    getAllQuestions,
-    getQuestionById,
-    createQuestion,
-    updateQuestionById,
-    deleteQuestionById,
     createForm,
     getFormById,
     updateFormById,

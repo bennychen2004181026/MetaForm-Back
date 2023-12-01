@@ -1,6 +1,6 @@
 import { Request, Response, RequestHandler } from 'express';
-import Company from '../models/company.model';
-import { ICompany } from '../interfaces/company';
+import Company from '@models/company.model';
+import { ICompany } from '@interfaces/company';
 
 /**
  * @swagger
@@ -73,7 +73,7 @@ const addCompany: RequestHandler = async (req: Request, res: Response) => {
       });
       res.status(201).json(company);
     } else {
-      res.status(400).json({ error: 'Company abn already exists' });
+      res.status(400).json({ error: 'Company with this abn already exists' });
     }
   } catch (error) {
     res.status(400).json((error as Error).message);
@@ -247,6 +247,10 @@ const getCompanyById: RequestHandler = async (req: Request, res: Response) => {
 
 const updateCompanyById: RequestHandler = async (req: Request, res: Response) => {
   try {
+    const { companyName, abn, logo, description, industry, employees, address } = req.body;
+    if (!companyName && !abn && !logo && !description && !industry && !employees && !address) {
+      return res.status(400).json({ message: 'Body contains no update to the Company' })
+    }
     const updatedCompany = await Company.findByIdAndUpdate(req.params.id, req.body, { new: true }).exec();
     if (!updatedCompany) {
       return res.status(404).json({ message: 'Company not found' });
@@ -258,59 +262,8 @@ const updateCompanyById: RequestHandler = async (req: Request, res: Response) =>
   }
 };
 
-/**
- * @swagger
- * /companies/{id}:
- *  delete:
- *    summary: return removed company by id
- *    tags: [Companies]
- *    parameters:
- *      - name: id
- *        in: path
- *        required: true
- *        schema:
- *          type: string
- *        example: '61da409632c8196efc5dd779'
- *    responses:
- *      200:
- *        description:  Deleted company should be returned
- *        content:
- *          application/json:
- *            schema:
- *              type: object
- *            example:
- *              _id: '61da409632c8196efc5dd779'
- *              companyName: 'Company A Update'
- *              abn: '123456789'
- *              description: 'Company A description'
- *              industry: 
- *                - manufacturing
- *                - diary
- *              address: '100 Elizabeth Street, 2000'
- *              _v: 0
- *      404:
- *        description: company not found
- *        content:
- *          application/json:
- *            schema:
- *              type: object
- *            example:
- *              error: 'sku not found.'
+/*
+ * delete function is not implemented as it won't be applicable for companies
  */
 
-const deleteCompanyById: RequestHandler = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const company = await Company.findByIdAndDelete(id).exec();
-    if (!company) {
-      res.status(404).json({ error: `${id} not found!` });
-    } else {
-      res.status(200).json({ message: 'Deleted successfully' });
-    }
-    
-  } catch (error) {
-    res.status(400).json((error as Error).message);
-  }
-};
-
-export { addCompany, getCompanyById, getAllCompanies, updateCompanyById, deleteCompanyById };
+export { addCompany, getCompanyById, getAllCompanies, updateCompanyById };

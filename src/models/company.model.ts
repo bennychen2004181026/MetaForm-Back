@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose';
-import { ICompany } from '../interfaces/company';
+import { ICompany } from '@interfaces/company';
 
 const CompanySchema: Schema = new Schema({
     companyName: {

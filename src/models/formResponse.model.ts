@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose';
-import { IFormResponse } from '../types/formResponse';
+import { IFormResponse } from '@interfaces/formResponse';
 
 const { Types } = Schema;
 const formResponse = new Schema({
