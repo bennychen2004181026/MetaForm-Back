@@ -11,8 +11,8 @@ import morganOption from '@config/utils/morganOption'
 import router from '@routes/index';
 import sessionConfig from '@utils/sessionConfig'
 import ValidationError from '@middleware/errors/ValidationError';
-import NotFoundError from '@errors/NotFoundError';
-import UnknownError from '@errors/UnknownError';
+import NotFoundError from '@middleware/errors/NotFoundError';
+import UnknownError from '@middleware/errors/UnknownError';
 import CastError from '@middleware/errors/CastError';
 import middlewares from '@middleware/index';
 
