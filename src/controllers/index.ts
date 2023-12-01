@@ -18,6 +18,13 @@ import {
 } from './form.controller';
 import authController from './auth.controller';
 import userController from './user.controller';
+import {
+    getAllQuestions,
+    getQuestionById,
+    createQuestion,
+    updateQuestionById,
+    deleteQuestionById,
+} from './question.controller';
 
 export default {
     addCompany,
@@ -25,6 +32,11 @@ export default {
     getAllCompanies,
     updateCompanyById,
     deleteCompanyById,
+    getAllQuestions,
+    getQuestionById,
+    createQuestion,
+    updateQuestionById,
+    deleteQuestionById,
     createForm,
     getFormById,
     updateFormById,
