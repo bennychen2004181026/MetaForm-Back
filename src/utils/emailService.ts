@@ -1,7 +1,5 @@
 import sgMail from '@sendgrid/mail';
 import EmailOptions from '@interfaces/EmailOptions';
-import logger from '@config/utils/winston';
-
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY as string);
 
@@ -20,12 +18,26 @@ const emailTemplates = {
     </body>
     </html>
 `,
+    resetPassword: (resetLink: string): string => `
+    <html>
+    <body>
+      <p>Hello,</p>
+      <p>You requested to reset your password. Please click the button below to set a new password. If you did not request a password reset, please ignore this email.</p>
+      <p>This link expires in 10 minutes. If you did not request a password reset, you can safely ignore this email.</p>
+      <a href="${resetLink}" 
+         style="background-color: blue; color: white; padding: 12px 16px; text-align: center; 
+                text-decoration: none; display: inline-block; border-radius: 8px; font-size: 16px; margin-top: 10px;">
+        Reset my password
+      </a>
+    </body>
+    </html>
+`
 };
 
 const sendEmail = async (options: EmailOptions): Promise<boolean> => {
     const msg = {
         to: options.to,
-        from: process.env.EMAIL_USERNAME as string, 
+        from: process.env.EMAIL_USERNAME as string,
         subject: options.subject,
         html: options.html,
     };
@@ -34,7 +46,6 @@ const sendEmail = async (options: EmailOptions): Promise<boolean> => {
         await sgMail.send(msg);
         return true;
     } catch (error) {
-        logger.error(error);
         return false;
     }
 };

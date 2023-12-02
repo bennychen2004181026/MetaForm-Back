@@ -34,7 +34,7 @@ const CompanySchema: Schema = new Schema({
 
     employees: {
         type: [Schema.Types.ObjectId],
-        ref: 'User'
+        ref: 'User',
     },
 
     address: {
@@ -42,9 +42,7 @@ const CompanySchema: Schema = new Schema({
     },
 });
 
-
-CompanySchema.pre('save', async (next) => {
-
+CompanySchema.pre('save', async next => {
     next();
 });
 

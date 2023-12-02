@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import jwt from 'jsonwebtoken';
 import Errors from '@errors/ClassError'
+import {validateToken} from '@utils/jwt'
 
 const verifyToken: RequestHandler = (req: Request, res: Response, next: NextFunction): void => {
     const { token } = req.params;
@@ -10,7 +11,7 @@ const verifyToken: RequestHandler = (req: Request, res: Response, next: NextFunc
             throw new Errors.EnvironmentError('JWT secret not defined', 'env')
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = validateToken(token);
 
         res.locals.decoded = decoded
 
