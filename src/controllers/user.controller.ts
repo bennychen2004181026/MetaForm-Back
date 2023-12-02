@@ -281,6 +281,38 @@ const forgotPassword: RequestHandler = async (
     }
 };
 
+const resetPassword: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
+    const { token, password } = req.body;
+
+    try {
+        const user = await User.findOne({
+            passwordResetToken: token,
+            passwordResetExpires: { $gt: Date.now() },
+        }).select('+password');
+
+        if (!user) {
+            throw new Errors.ValidationError('Invalid or expired password reset token.', 'Token');
+        }
+        await User.updateOne(
+            { _id: user._id },
+            {
+                $set: { password },
+                $unset: {
+                    passwordResetToken: '',
+                    passwordResetExpires: '',
+                },
+            },
+        );
+        res.status(200).json({ message: 'Your password has been successfully reset.' });
+    } catch (error) {
+        next(error);
+    }
+};
+
 export default {
     sendVerificationEmail,
     prepareAccountCreation,
@@ -288,4 +320,5 @@ export default {
     completeAccount,
     login,
     forgotPassword,
+    resetPassword,
 };

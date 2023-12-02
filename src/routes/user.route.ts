@@ -46,4 +46,9 @@ userRouter.post('/forgotPassword',
     userControllers.forgotPassword
 )
 
+userRouter.post('/resetPassword',
+    routeValidators.resetPasswordValidator,
+    userControllers.resetPassword
+)
+
 export default userRouter;
