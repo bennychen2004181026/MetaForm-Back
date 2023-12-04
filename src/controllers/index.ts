@@ -39,6 +39,11 @@ export default {
     deleteQuestionFromForm,
     deleteResponseFromForm,
     getAllFormsByUserId,
+    getAllQuestions,
+    getQuestionById,
+    createQuestion,
+    updateQuestionById,
+    deleteQuestionById,
     userController,
     authController,
 };
