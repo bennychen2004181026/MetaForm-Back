@@ -9,7 +9,7 @@ import Errors from '@errors/ClassError';
 import User from '@models/user.model';
 import Company from '@models/company.model';
 import { IUser } from '@interfaces/users';
-import { ICompany } from '@interfaces/companies';
+import { ICompany } from '@interfaces/company';
 import { generateTokenHelper } from '@utils/jwt';
 
 const sendVerificationEmail: RequestHandler = async (
