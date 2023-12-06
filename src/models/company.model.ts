@@ -22,7 +22,7 @@ const CompanySchema: Schema = new Schema({
     },
 
     industry: {
-        type: [String],
+        type: String,
         required: true,
     },
 

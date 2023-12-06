@@ -5,7 +5,7 @@ export interface ICompany extends Document {
     abn: string;
     logo?: string;
     description: string;
-    industry: string[];
+    industry: string;
     isActive: boolean;
     employees?: ObjectId[];
     address?: string;
