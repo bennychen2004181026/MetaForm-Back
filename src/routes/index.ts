@@ -1,11 +1,16 @@
-import Router from 'express';
-import userRouter from '@routes/user.route'
+import Router, { Response, Request } from 'express';
+import userRouter from '@routes/user.route';
 import companyRouter from './company.route';
 import formRouter from './form.route';
 import questionRouter from './question.route';
 import responseRouter from './response.route';
 
 const router = Router();
+const healthCheckPath = '/health';
+
+router.get(healthCheckPath, (req: Request, res: Response) => {
+    res.status(200).send('APIs OK');
+});
 router.use('/companies', companyRouter);
 router.use('/forms', formRouter);
 router.use('/questions', questionRouter);
