@@ -8,22 +8,17 @@ const UserSchema: Schema = new Schema(
         username: {
             type: String,
             required: true,
-            unique: true,
+            unique:false,
+            index:false,
             minlength: 5,
             maxlength: 20,
-            index: true,
         },
         firstName: {
             type: String,
             required: true,
-            minlength: 1,
-            maxlength: 30
         },
         lastName: {
             type: String,
-            required: true,
-            minlength: 1,
-            maxlength: 30
         },
         email: {
             type: String,
@@ -110,6 +105,10 @@ const UserSchema: Schema = new Schema(
 );
 
 UserSchema.pre('save', async function (next: CallbackWithoutResultAndOptionalError) {
+    if (!this.password) {
+        return next();
+    }
+
     if (this.isModified('password') || this.isNew) {
         try {
             const saltRounds = 10;
@@ -132,6 +131,10 @@ UserSchema.methods.toJSON = function () {
     delete obj.password;
     return obj;
 };
+
+if (mongoose.models.User) {
+    delete mongoose.models.User;
+  }
 
 const User = mongoose.model<IUser>('User', UserSchema);
 

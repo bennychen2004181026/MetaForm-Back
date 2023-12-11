@@ -9,29 +9,18 @@ const userInfosValidator = [
         .notEmpty()
         .withMessage('Username cannot be empty')
         .isLength({ min: 5, max: 20 })
-        .withMessage('Username must be between 5 and 20 characters long')
-        .isAlphanumeric()
-        .withMessage('Username must be alphanumeric'),
+        .withMessage('Username must be between 5 and 20 characters long'),
 
     body('firstName')
         .trim()
         .isString()
         .notEmpty()
-        .withMessage('FirstName cannot be empty')
-        .isLength({ min: 1, max: 30 })
-        .withMessage('First name must be between 1 and 30 characters long')
-        .isAlpha()
-        .withMessage('First name must be alphabetic characters'),
+        .withMessage('FirstName cannot be empty'),
 
     body('lastName')
+        .optional()
         .trim()
-        .isString()
-        .notEmpty()
-        .withMessage('LastName cannot be empty')
-        .isLength({ min: 1, max: 30 })
-        .withMessage('Last name must be between 1 and 30 characters long')
-        .isAlpha()
-        .withMessage('Last name must be alphabetic characters'),
+        .isString(),
 
     body('email')
         .trim()

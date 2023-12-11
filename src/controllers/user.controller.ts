@@ -9,7 +9,7 @@ import Errors from '@errors/ClassError';
 import User from '@models/user.model';
 import Company from '@models/company.model';
 import { IUser } from '@interfaces/users';
-import { ICompany } from '@interfaces/companies';
+import { ICompany } from '@interfaces/company';
 import { generateTokenHelper } from '@utils/jwt';
 
 const sendVerificationEmail: RequestHandler = async (
@@ -66,13 +66,13 @@ const prepareAccountCreation: RequestHandler = async (
         const { username, email } = res.locals.decoded;
 
         if (!username || !email) {
-            throw new Errors.ValidationError('Username or email not provided', 'token');
+            throw new Errors.ValidationError('Invalid token', 'Token');
         }
 
-        const userExists = await User.findOne({ $or: [{ email }, { username }] });
+        const userExists = await User.findOne({ email });
 
         if (userExists) {
-            throw new Errors.DatabaseError('Email or username already in use', 'user');
+            throw new Errors.DatabaseError('Email already in use', 'Email');
         }
 
         res.status(200).json({ email, username });
@@ -89,10 +89,10 @@ const createAccount: RequestHandler = async (
     try {
         const { email, username, firstName, lastName, password } = req.body;
 
-        const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+        const existingUser = await User.findOne({ email });
 
         if (existingUser) {
-            throw new Errors.ValidationError('Email or username already in use', 'email/username');
+            throw new Errors.ValidationError('Email already in use', 'Email');
         }
 
         const partialProperties: Partial<IUser> = {

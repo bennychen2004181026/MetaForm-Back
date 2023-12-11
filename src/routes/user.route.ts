@@ -1,8 +1,10 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
+import passport from 'passport';
 import routeValidators from '@middleware/routeValidators/users';
 import userRouteMiddlewares from '@middleware/usersRoute'
 import userControllers from '@controllers/user.controller';
 import middlewares from '@middleware/index';
+import { IUser } from '@interfaces/users'
 
 const userRouter = express.Router();
 
@@ -51,4 +53,25 @@ userRouter.post('/resetPassword',
     userControllers.resetPassword
 )
 
-export default userRouter;
+userRouter.get('/auth/google', (req: Request, res: Response, next: NextFunction) => {
+    next();
+}, passport.authenticate('google', { scope: ['profile', 'email'] }))
+
+userRouter.get('/auth/google/callback',
+    passport.authenticate('google', { failureRedirect: '/users/login' }),
+    (req: Request, res: Response, next: NextFunction): void => {
+        try {
+            const user = req.user as IUser;
+            res.locals.user = user
+            res.locals.userId = user._id
+            next()
+        }
+        catch (error) {
+            next(error)
+        }
+    },
+    userRouteMiddlewares.generateToken,
+    userRouteMiddlewares.checkAccountCompletion,
+    userRouteMiddlewares.sendTokenAndUser,
+);
+export default userRouter
