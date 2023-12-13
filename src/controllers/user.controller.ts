@@ -10,10 +10,11 @@ import User from '@models/user.model';
 import Company from '@models/company.model';
 import { IUser } from '@interfaces/users';
 import { ICompany } from '@interfaces/company';
+import { GetObjectParams } from '@interfaces/GetObjectParams';
 import { generateTokenHelper } from '@utils/jwt';
 import s3Client from '@utils/s3Client';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 
 const sendVerificationEmail: RequestHandler = async (
     req: Request,
@@ -340,9 +341,51 @@ const getPresignedUrl: RequestHandler = async (
         const command = new PutObjectCommand({
             Bucket: S3_BUCKET_NAME,
             Key: key,
+            ContentType: 'image/jpeg',
         });
-        const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
-        res.status(200).json({ url: presignedUrl });
+
+        const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 600 });
+
+        res.status(200).json({ url: presignedUrl, key });
+    } catch (error: unknown) {
+        next(error);
+    }
+};
+
+const getDownloadPresignedUrl: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
+    const { s3key } = req.query;
+
+    if (!s3key) {
+        throw new Errors.ValidationError('S3 key not found in param', 's3key');
+    }
+
+    if (typeof s3key !== 'string') {
+        throw new Errors.ValidationError('Key must be a string', 's3key');
+    }
+
+    const { S3_BUCKET_NAME } = process.env;
+
+    if (!S3_BUCKET_NAME) {
+        throw new Errors.EnvironmentError(
+            'AWS configuration not set in environment variables',
+            'env variables',
+        );
+    }
+
+    try {
+        const getObjectParams: GetObjectParams = {
+            Bucket: S3_BUCKET_NAME,
+            Key: s3key,
+        };
+
+        const command = new GetObjectCommand(getObjectParams);
+        const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 600 });
+
+        res.json({ presignedUrl });
     } catch (error: unknown) {
         next(error);
     }
@@ -357,4 +400,5 @@ export default {
     forgotPassword,
     resetPassword,
     getPresignedUrl,
+    getDownloadPresignedUrl,
 };
