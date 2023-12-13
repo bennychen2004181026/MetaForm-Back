@@ -11,6 +11,9 @@ import Company from '@models/company.model';
 import { IUser } from '@interfaces/users';
 import { ICompany } from '@interfaces/company';
 import { generateTokenHelper } from '@utils/jwt';
+import s3Client from '@utils/s3Client';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
 
 const sendVerificationEmail: RequestHandler = async (
     req: Request,
@@ -313,6 +316,38 @@ const resetPassword: RequestHandler = async (
     }
 };
 
+const getPresignedUrl: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
+    const { userId } = res.locals;
+
+    if (!userId || userId.trim().length === 0) {
+        throw new Errors.NotFoundError('User not found', 'userId');
+    }
+
+    const key = `${userId}/companyLogo-${Date.now()}.jpeg`;
+    const { S3_BUCKET_NAME } = process.env;
+
+    if (!S3_BUCKET_NAME) {
+        throw new Errors.EnvironmentError(
+            'AWS configuration not set in environment variables',
+            'env variables',
+        );
+    }
+    try {
+        const command = new PutObjectCommand({
+            Bucket: S3_BUCKET_NAME,
+            Key: key,
+        });
+        const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+        res.status(200).json({ url: presignedUrl });
+    } catch (error: unknown) {
+        next(error);
+    }
+};
+
 export default {
     sendVerificationEmail,
     prepareAccountCreation,
@@ -321,4 +356,5 @@ export default {
     login,
     forgotPassword,
     resetPassword,
+    getPresignedUrl,
 };
