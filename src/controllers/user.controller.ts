@@ -5,16 +5,16 @@ import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 
 import { sendEmail, emailTemplates } from '@utils/emailService';
+import { getSignedUrl as getCloudFrontSignedUrl } from '@aws-sdk/cloudfront-signer';
 import Errors from '@errors/ClassError';
 import User from '@models/user.model';
 import Company from '@models/company.model';
 import { IUser } from '@interfaces/users';
 import { ICompany } from '@interfaces/company';
-import { GetObjectParams } from '@interfaces/GetObjectParams';
 import { generateTokenHelper } from '@utils/jwt';
 import s3Client from '@utils/s3Client';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
 
 const sendVerificationEmail: RequestHandler = async (
     req: Request,
@@ -352,7 +352,7 @@ const getPresignedUrl: RequestHandler = async (
     }
 };
 
-const getDownloadPresignedUrl: RequestHandler = async (
+const getCloudFrontPresignedUrl: RequestHandler = async (
     req: Request,
     res: Response,
     next: NextFunction,
@@ -367,25 +367,27 @@ const getDownloadPresignedUrl: RequestHandler = async (
         throw new Errors.ValidationError('Key must be a string', 's3key');
     }
 
-    const { S3_BUCKET_NAME } = process.env;
+    const { DISTRIBUTION_DOMAIN_NAME, CLOUDFRONT_PRIVATE_KEY, CLOUDFRONT_KEYPAIR_ID } = process.env;
 
-    if (!S3_BUCKET_NAME) {
+    if (!DISTRIBUTION_DOMAIN_NAME || !CLOUDFRONT_PRIVATE_KEY || !CLOUDFRONT_KEYPAIR_ID) {
         throw new Errors.EnvironmentError(
             'AWS configuration not set in environment variables',
             'env variables',
         );
     }
 
+    const url = `${DISTRIBUTION_DOMAIN_NAME}/${s3key}`;
+    const date = new Date(Date.now() + 1000 * 60 * 60 * 24 * 365 * 10); // 10 years
+
     try {
-        const getObjectParams: GetObjectParams = {
-            Bucket: S3_BUCKET_NAME,
-            Key: s3key,
-        };
+        const cloudFrontSignedUrl = getCloudFrontSignedUrl({
+            url,
+            keyPairId: CLOUDFRONT_KEYPAIR_ID,
+            privateKey: CLOUDFRONT_PRIVATE_KEY,
+            dateLessThan: date.toISOString(),
+        });
 
-        const command = new GetObjectCommand(getObjectParams);
-        const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 600 });
-
-        res.json({ presignedUrl });
+        res.json({ cloudFrontSignedUrl });
     } catch (error: unknown) {
         next(error);
     }
@@ -400,5 +402,5 @@ export default {
     forgotPassword,
     resetPassword,
     getPresignedUrl,
-    getDownloadPresignedUrl,
+    getCloudFrontPresignedUrl,
 };

@@ -92,6 +92,6 @@ userRouter.get(
     userControllers.getPresignedUrl,
 );
 
-userRouter.get('/getDownloadPresignedUrl', userControllers.getDownloadPresignedUrl);
+userRouter.get('/getCloudFrontPresignedUrl', userControllers.getCloudFrontPresignedUrl);
 
 export default userRouter;
