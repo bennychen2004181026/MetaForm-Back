@@ -357,13 +357,13 @@ const getCloudFrontPresignedUrl: RequestHandler = async (
     res: Response,
     next: NextFunction,
 ): Promise<Response | void> => {
-    const { s3key } = req.query;
+    const { key } = req.query;
 
-    if (!s3key) {
+    if (!key) {
         throw new Errors.ValidationError('S3 key not found in param', 's3key');
     }
 
-    if (typeof s3key !== 'string') {
+    if (typeof key !== 'string') {
         throw new Errors.ValidationError('Key must be a string', 's3key');
     }
 
@@ -376,7 +376,7 @@ const getCloudFrontPresignedUrl: RequestHandler = async (
         );
     }
 
-    const url = `${DISTRIBUTION_DOMAIN_NAME}/${s3key}`;
+    const url = `${DISTRIBUTION_DOMAIN_NAME}/${key}`;
     const date = new Date(Date.now() + 1000 * 60 * 60 * 24 * 365 * 10); // 10 years
 
     try {
@@ -387,7 +387,7 @@ const getCloudFrontPresignedUrl: RequestHandler = async (
             dateLessThan: date.toISOString(),
         });
 
-        res.json({ cloudFrontSignedUrl });
+        res.status(200).json({ cloudFrontSignedUrl });
     } catch (error: unknown) {
         next(error);
     }
