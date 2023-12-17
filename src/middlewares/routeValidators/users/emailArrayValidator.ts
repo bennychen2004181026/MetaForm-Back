@@ -1,4 +1,4 @@
-import { body, validationResult } from 'express-validator';
+import { body, param, validationResult } from 'express-validator';
 import { Request, Response, NextFunction } from 'express';
 import Errors from '@errors/ClassError/index';
 
@@ -19,6 +19,8 @@ const emailArrayValidator = [
             ),
         )
         .withMessage('All items in the array must be valid emails'),
+
+    param('companyId').trim().isString().notEmpty().withMessage('Company Id is required'),
 
     async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         const errors = validationResult(req);

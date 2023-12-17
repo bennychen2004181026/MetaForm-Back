@@ -32,10 +32,10 @@ const emailTemplates = {
     </body>
     </html>
 `,
-    employeeVerification: (verificationLink: string, employeeName: string): string => `
+    employeeVerification: (verificationLink: string, companyName: string): string => `
     <html>
     <body>
-      <p>Hi ${employeeName},</p>
+      <p>Hi Dear ${companyName}'s employees,</p>
       <p>Welcome to our team! To get started, please verify your email address and set up your account.</p>
       <p>Click the button below to verify your email address. This link expires in 10 minutes.</p>
       <a href="${verificationLink}" 
