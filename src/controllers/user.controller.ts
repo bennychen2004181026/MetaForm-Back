@@ -20,9 +20,9 @@ const sendVerificationEmail: RequestHandler = async (
     try {
         const { email, username } = req.body;
 
-        const { NODE_ENV, JWT_SECRET, PORT, EMAIL_USERNAME, SENDGRID_API_KEY } = process.env;
+        const { NODE_ENV, JWT_SECRET, FRONT, EMAIL_USERNAME, SENDGRID_API_KEY } = process.env;
 
-        if (!NODE_ENV || !JWT_SECRET || !PORT || !EMAIL_USERNAME || !SENDGRID_API_KEY) {
+        if (!NODE_ENV || !JWT_SECRET || !FRONT || !EMAIL_USERNAME || !SENDGRID_API_KEY) {
             throw new Errors.EnvironmentError('Missing environment variables', 'env');
         }
 
@@ -30,11 +30,11 @@ const sendVerificationEmail: RequestHandler = async (
 
         let verificationLink: string;
         if (NODE_ENV === 'production') {
-            verificationLink = `http://localhost:${PORT}/users/verification/${verificationToken}`;
+            verificationLink = `http://localhost:${FRONT}/users/verification/${verificationToken}`;
         } else if (NODE_ENV === 'test') {
-            verificationLink = `http://localhost:${PORT}/users/verification/${verificationToken}`;
+            verificationLink = `http://localhost:${FRONT}/users/verification/${verificationToken}`;
         } else {
-            verificationLink = `http://localhost:${PORT}/users/verification/${verificationToken}`;
+            verificationLink = `http://localhost:${FRONT}/users/verification/${verificationToken}`;
         }
 
         const emailContent = emailTemplates.verification(verificationLink);
@@ -227,9 +227,9 @@ const forgotPassword: RequestHandler = async (
     res: Response,
     next: NextFunction,
 ): Promise<Response | void> => {
-    const { NODE_ENV, JWT_SECRET, PORT, EMAIL_USERNAME, SENDGRID_API_KEY } = process.env;
+    const { NODE_ENV, JWT_SECRET, FRONT, EMAIL_USERNAME, SENDGRID_API_KEY } = process.env;
 
-    if (!NODE_ENV || !JWT_SECRET || !PORT || !EMAIL_USERNAME || !SENDGRID_API_KEY) {
+    if (!NODE_ENV || !JWT_SECRET || !FRONT || !EMAIL_USERNAME || !SENDGRID_API_KEY) {
         return next(new Errors.EnvironmentError('Missing environment variables', 'env'));
     }
 
@@ -238,11 +238,11 @@ const forgotPassword: RequestHandler = async (
 
     let resetLink: string;
     if (NODE_ENV === 'production') {
-        resetLink = `http://localhost:${PORT}/users/resetPassword/${resetToken}`;
+        resetLink = `http://localhost:${FRONT}/users/resetPassword/${resetToken}`;
     } else if (NODE_ENV === 'test') {
-        resetLink = `http://localhost:${PORT}/users/resetPassword/${resetToken}`;
+        resetLink = `http://localhost:${FRONT}/users/resetPassword/${resetToken}`;
     } else {
-        resetLink = `http://localhost:${PORT}/users/resetPassword/${resetToken}`;
+        resetLink = `http://localhost:${FRONT}/users/resetPassword/${resetToken}`;
     }
 
     try {

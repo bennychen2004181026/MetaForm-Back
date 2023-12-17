@@ -272,9 +272,9 @@ const inviteEmployees: RequestHandler = async (
     const { emails } = req.body as { emails: string[] };
     const { companyId } = req.params as { companyId: string };
     const { userId } = res.locals as { userId: string };
-    const { NODE_ENV, JWT_SECRET, PORT, EMAIL_USERNAME, SENDGRID_API_KEY } = process.env;
+    const { NODE_ENV, JWT_SECRET, FRONT, EMAIL_USERNAME, SENDGRID_API_KEY } = process.env;
 
-    if (!NODE_ENV || !JWT_SECRET || !PORT || !EMAIL_USERNAME || !SENDGRID_API_KEY) {
+    if (!NODE_ENV || !JWT_SECRET || !FRONT || !EMAIL_USERNAME || !SENDGRID_API_KEY) {
         return next(new Errors.EnvironmentError('Missing environment variables', 'env'));
     }
 
@@ -296,11 +296,11 @@ const inviteEmployees: RequestHandler = async (
 
                 let verificationLink: string;
                 if (NODE_ENV === 'production') {
-                    verificationLink = `http://localhost:${PORT}/companies/${companyId}/inviteEmployees/${verificationToken}`;
+                    verificationLink = `http://localhost:${FRONT}/companies/${companyId}/invite-employees/${verificationToken}`;
                 } else if (NODE_ENV === 'test') {
-                    verificationLink = `http://localhost:${PORT}/companies/${companyId}/inviteEmployees/${verificationToken}`;
+                    verificationLink = `http://localhost:${FRONT}/companies/${companyId}/invite-employees/${verificationToken}`;
                 } else {
-                    verificationLink = `http://localhost:${PORT}/companies/${companyId}/inviteEmployees/${verificationToken}`;
+                    verificationLink = `http://localhost:${FRONT}/companies/${companyId}/invite-employees/${verificationToken}`;
                 }
 
                 const emailContent = emailTemplates.employeeVerification(
