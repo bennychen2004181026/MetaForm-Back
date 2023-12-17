@@ -271,6 +271,7 @@ const inviteEmployees: RequestHandler = async (
 ): Promise<Response | void> => {
     const { emails } = req.body as { emails: string[] };
     const { companyId } = req.params as { companyId: string };
+    const { userId } = res.locals as { userId: string };
     const { NODE_ENV, JWT_SECRET, PORT, EMAIL_USERNAME, SENDGRID_API_KEY } = process.env;
 
     if (!NODE_ENV || !JWT_SECRET || !PORT || !EMAIL_USERNAME || !SENDGRID_API_KEY) {
@@ -289,7 +290,9 @@ const inviteEmployees: RequestHandler = async (
 
         const emailSendingPromises = emails.map(async (email: string) => {
             try {
-                const verificationToken = jwt.sign({ email }, JWT_SECRET, { expiresIn: '6h' });
+                const verificationToken = jwt.sign({ email, invitedBy: userId }, JWT_SECRET, {
+                    expiresIn: '6h',
+                });
 
                 let verificationLink: string;
                 if (NODE_ENV === 'production') {
