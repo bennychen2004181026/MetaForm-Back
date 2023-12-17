@@ -3,24 +3,20 @@ import { Request, Response, NextFunction } from 'express';
 import Errors from '@errors/ClassError/index';
 
 const emailArrayValidator = [
-    body('emails')
-        .isArray()
-        .withMessage('Emails must be an array')
-        .bail()
+    body('emails').isArray().withMessage('Emails must be an array'),
+
+    body('emails.*')
         .notEmpty()
-        .withMessage('Email array cannot be empty')
-        .bail()
-        .custom((emails: string[]) =>
-            emails.every((email: string) =>
-                body('dummy')
-                    .isEmail()
-                    .withMessage('Email must be valid')
-                    .run({ body: { dummy: email } }),
-            ),
-        )
+        .withMessage('Email is empty in the array')
+        .isEmail()
         .withMessage('All items in the array must be valid emails'),
 
-    param('companyId').trim().isString().notEmpty().withMessage('Company Id is required'),
+    param('companyId')
+        .trim()
+        .isString()
+        .withMessage('Company Id is a string')
+        .notEmpty()
+        .withMessage('Company Id is required'),
 
     async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         const errors = validationResult(req);

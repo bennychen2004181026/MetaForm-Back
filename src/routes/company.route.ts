@@ -1,14 +1,19 @@
 import Router from 'express';
 import {
-  addCompany,
-  getCompanyById,
-  getAllCompanies,
-  updateCompanyById,
+    addCompany,
+    getCompanyById,
+    getAllCompanies,
+    updateCompanyById,
+    inviteEmployees,
 } from '@controllers/company.controller';
+import routeValidators from '@middleware/routeValidators/companies';
 
 const router = Router();
 router.get('/', getAllCompanies);
 router.get('/:id', getCompanyById);
 router.post('/', addCompany);
 router.patch('/:id', updateCompanyById);
+
+router.get('/:companyId/invite-employees', routeValidators.emailArrayValidator, inviteEmployees);
+
 export default router;

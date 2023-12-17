@@ -1,6 +1,10 @@
-import { Request, Response, RequestHandler } from 'express';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
+import jwt from 'jsonwebtoken';
+
 import Company from '@models/company.model';
 import { ICompany } from '@interfaces/company';
+import Errors from '@errors/ClassError';
+import { sendEmail, emailTemplates } from '@utils/emailService';
 
 /**
  * @swagger
@@ -19,7 +23,7 @@ import { ICompany } from '@interfaces/company';
  *              abn: '123456789'
  *              logo: 'http://companya.png'
  *              description: 'Company A description'
- *              industry: 
+ *              industry:
  *                - manufacturing
  *                - diary
  *              address: '100 Elizabeth Street, 2000'
@@ -36,7 +40,7 @@ import { ICompany } from '@interfaces/company';
  *              abn: '123456789'
  *              logo: 'http://companya.png'
  *              description: 'Company A description'
- *              industry: 
+ *              industry:
  *                - manufacturing
  *                - diary
  *              isActive: true
@@ -55,32 +59,30 @@ import { ICompany } from '@interfaces/company';
  *                  exmaple: 'error message'
  */
 const addCompany: RequestHandler = async (req: Request, res: Response) => {
-  try {
-    const { companyName, abn, logo, description, industry, employees, address } = req.body;
-    const companyByAbn = await Company.findOne({
-      abn,
-    });
-    if (!companyByAbn) {
-      const company: ICompany = await Company.create({
-        companyName,
-        abn,
-        logo,
-        description,
-        industry,
-        isActive: true,
-        employees,
-        address,
-      });
-      res.status(201).json(company);
-    } else {
-      res.status(400).json({ error: 'Company with this abn already exists' });
+    try {
+        const { companyName, abn, logo, description, industry, employees, address } = req.body;
+        const companyByAbn = await Company.findOne({
+            abn,
+        });
+        if (!companyByAbn) {
+            const company: ICompany = await Company.create({
+                companyName,
+                abn,
+                logo,
+                description,
+                industry,
+                isActive: true,
+                employees,
+                address,
+            });
+            res.status(201).json(company);
+        } else {
+            res.status(400).json({ error: 'Company with this abn already exists' });
+        }
+    } catch (error) {
+        res.status(400).json((error as Error).message);
     }
-  } catch (error) {
-    res.status(400).json((error as Error).message);
-  }
 };
-
-
 
 /**
  * @swagger
@@ -101,7 +103,7 @@ const addCompany: RequestHandler = async (req: Request, res: Response) => {
  *                abn: '123456789'
  *                logo: 'http://companya.png'
  *                description: 'Company A description'
- *                industry: 
+ *                industry:
  *                  - manufacturing
  *                  - diary
  *                isActive: true
@@ -112,7 +114,7 @@ const addCompany: RequestHandler = async (req: Request, res: Response) => {
  *                abn: '123456789'
  *                logo: 'http://companya.png'
  *                description: 'Company B description'
- *                industry: 
+ *                industry:
  *                  - manufacturing
  *                  - diary
  *                isActive: true
@@ -121,12 +123,12 @@ const addCompany: RequestHandler = async (req: Request, res: Response) => {
  */
 
 const getAllCompanies: RequestHandler = async (req: Request, res: Response) => {
-  try {
-    const company = await Company.find().exec();
-    return res.status(200).json(company);
-  } catch (error) {
-    return res.status(400).json((error as Error).message);
-  }
+    try {
+        const company = await Company.find().exec();
+        return res.status(200).json(company);
+    } catch (error) {
+        return res.status(400).json((error as Error).message);
+    }
 };
 
 /**
@@ -155,7 +157,7 @@ const getAllCompanies: RequestHandler = async (req: Request, res: Response) => {
  *              abn: '123456789'
  *              logo: http://companya.png'
  *              description: 'Company A description'
- *              industry: 
+ *              industry:
  *                - manufacturing
  *                - diary
  *              isActive: true
@@ -171,19 +173,18 @@ const getAllCompanies: RequestHandler = async (req: Request, res: Response) => {
  */
 
 const getCompanyById: RequestHandler = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const companyById = await Company.findById(id);
-    if (companyById) {
-      res.status(200).json({ message: companyById });
-    } else {
-      res.status(404).json({ error: `${id} not found!` });
+    try {
+        const { id } = req.params;
+        const companyById = await Company.findById(id);
+        if (companyById) {
+            res.status(200).json({ message: companyById });
+        } else {
+            res.status(404).json({ error: `${id} not found!` });
+        }
+    } catch (error) {
+        res.status(400).json((error as Error).message);
     }
-  } catch (error) {
-    res.status(400).json((error as Error).message);
-  }
 };
-
 
 /**
  * @swagger
@@ -209,7 +210,7 @@ const getCompanyById: RequestHandler = async (req: Request, res: Response) => {
  *            companyName: 'Company A Update'
  *            abn: '123456789'
  *            description: 'Company A description'
- *            industry: 
+ *            industry:
  *              - manufacturing
  *              - diary
  *            address: '100 Elizabeth Street, 2000'
@@ -225,7 +226,7 @@ const getCompanyById: RequestHandler = async (req: Request, res: Response) => {
  *            companyName: 'Company A Update'
  *            abn: '123456789'
  *            description: 'Company A description'
- *            industry: 
+ *            industry:
  *              - manufacturing
  *              - diary
  *            address: '100 Elizabeth Street, 2000'
@@ -246,24 +247,94 @@ const getCompanyById: RequestHandler = async (req: Request, res: Response) => {
  */
 
 const updateCompanyById: RequestHandler = async (req: Request, res: Response) => {
-  try {
-    const { companyName, abn, logo, description, industry, employees, address } = req.body;
-    if (!companyName && !abn && !logo && !description && !industry && !employees && !address) {
-      return res.status(400).json({ message: 'Body contains no update to the Company' })
+    try {
+        const { companyName, abn, logo, description, industry, employees, address } = req.body;
+        if (!companyName && !abn && !logo && !description && !industry && !employees && !address) {
+            return res.status(400).json({ message: 'Body contains no update to the Company' });
+        }
+        const updatedCompany = await Company.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+        }).exec();
+        if (!updatedCompany) {
+            return res.status(404).json({ message: 'Company not found' });
+        }
+        return res.status(200).json({ message: 'Company updated', updatedCompany });
+    } catch (error) {
+        return res.status(400).json({ message: 'Error updating company', error });
     }
-    const updatedCompany = await Company.findByIdAndUpdate(req.params.id, req.body, { new: true }).exec();
-    if (!updatedCompany) {
-      return res.status(404).json({ message: 'Company not found' });
+};
+
+const inviteEmployees: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
+    const { emails } = req.body as { emails: string[] };
+    const { companyId } = req.params as { companyId: string };
+    const { NODE_ENV, JWT_SECRET, PORT, EMAIL_USERNAME, SENDGRID_API_KEY } = process.env;
+
+    if (!NODE_ENV || !JWT_SECRET || !PORT || !EMAIL_USERNAME || !SENDGRID_API_KEY) {
+        return next(new Errors.EnvironmentError('Missing environment variables', 'env'));
     }
-    return res.status(200).json({ message: 'Company updated', updatedCompany });
-  }
-  catch (error) {
-    return res.status(400).json({ message: 'Error updating company', error });
-  }
+
+    try {
+        const existedCompany = await Company.findById(companyId).exec();
+        if (!existedCompany) {
+            throw new Errors.NotFoundError(
+                'Company not found in the database',
+                'Company not found',
+            );
+        }
+        const { companyName } = existedCompany;
+
+        const emailSendingPromises = emails.map(async (email: string) => {
+            try {
+                const verificationToken = jwt.sign({ email }, JWT_SECRET, { expiresIn: '6h' });
+
+                let verificationLink: string;
+                if (NODE_ENV === 'production') {
+                    verificationLink = `http://localhost:${PORT}/companies/${companyId}/inviteEmployees/${verificationToken}`;
+                } else if (NODE_ENV === 'test') {
+                    verificationLink = `http://localhost:${PORT}/companies/${companyId}/inviteEmployees/${verificationToken}`;
+                } else {
+                    verificationLink = `http://localhost:${PORT}/companies/${companyId}/inviteEmployees/${verificationToken}`;
+                }
+
+                const emailContent = emailTemplates.employeeVerification(
+                    verificationLink,
+                    companyName,
+                );
+
+                await sendEmail({
+                    to: email,
+                    subject: 'Welcome! Please Verify Your Email',
+                    html: emailContent,
+                });
+                return { email, success: true };
+            } catch (error) {
+                return { email, success: false, error };
+            }
+        });
+
+        const results = await Promise.all(emailSendingPromises);
+
+        const failedEmails = results.filter(result => !result.success);
+        if (failedEmails.length > 0) {
+            throw new Errors.BusinessLogicError(
+                `Failed to send verification emails to: ${failedEmails.join(', ')}`,
+            );
+        }
+
+        return res.status(200).json({
+            message: 'Verification emails have been sent to all employees.',
+        });
+    } catch (error: unknown) {
+        next(error);
+    }
 };
 
 /*
  * delete function is not implemented as it won't be applicable for companies
  */
 
-export { addCompany, getCompanyById, getAllCompanies, updateCompanyById };
+export { addCompany, getCompanyById, getAllCompanies, updateCompanyById, inviteEmployees };

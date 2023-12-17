@@ -313,75 +313,6 @@ const resetPassword: RequestHandler = async (
     }
 };
 
-const employeesEmailsVerification: RequestHandler = async (
-    req: Request,
-    res: Response,
-    next: NextFunction,
-): Promise<Response | void> => {
-    const { emails } = req.body as { emails: string[] };
-    const { companyId } = req.params as { companyId: string };
-    const { NODE_ENV, JWT_SECRET, PORT, EMAIL_USERNAME, SENDGRID_API_KEY } = process.env;
-
-    if (!NODE_ENV || !JWT_SECRET || !PORT || !EMAIL_USERNAME || !SENDGRID_API_KEY) {
-        return next(new Errors.EnvironmentError('Missing environment variables', 'env'));
-    }
-
-    try {
-        const existedCompany = await Company.findById(companyId).exec();
-        if (!existedCompany) {
-            throw new Errors.NotFoundError(
-                'Company not found in the database',
-                'Company not found',
-            );
-        }
-        const { companyName } = existedCompany;
-
-        const emailSendingPromises = emails.map(async (email: string) => {
-            try {
-                const verificationToken = jwt.sign({ email }, JWT_SECRET, { expiresIn: '6h' });
-
-                let verificationLink: string;
-                if (NODE_ENV === 'production') {
-                    verificationLink = `http://localhost:${PORT}/companies/${companyId}/inviteEmployees/${verificationToken}`;
-                } else if (NODE_ENV === 'test') {
-                    verificationLink = `http://localhost:${PORT}/companies/${companyId}/inviteEmployees/${verificationToken}`;
-                } else {
-                    verificationLink = `http://localhost:${PORT}/companies/${companyId}/inviteEmployees/${verificationToken}`;
-                }
-
-                const emailContent = emailTemplates.employeeVerification(
-                    verificationLink,
-                    companyName,
-                );
-
-                await sendEmail({
-                    to: email,
-                    subject: 'Welcome! Please Verify Your Email',
-                    html: emailContent,
-                });
-                return { email, success: true };
-            } catch (error) {
-                return { email, success: false, error };
-            }
-        });
-
-        const results = await Promise.all(emailSendingPromises);
-
-        const failedEmails = results.filter(result => !result.success);
-        if (failedEmails.length > 0) {
-            throw new Errors.BusinessLogicError(
-                `Failed to send verification emails to: ${failedEmails.join(', ')}`,
-            );
-        }
-
-        return res.status(200).json({
-            message: 'Verification emails have been sent to all employees.',
-        });
-    } catch (error: unknown) {
-        next(error);
-    }
-};
-
 export default {
     sendVerificationEmail,
     prepareAccountCreation,
@@ -390,5 +321,4 @@ export default {
     login,
     forgotPassword,
     resetPassword,
-    employeesEmailsVerification,
 };
