@@ -345,8 +345,8 @@ const AddEmployeeToCompany: RequestHandler = async (
     res: Response,
     next: NextFunction,
 ): Promise<Response | void> => {
-    const { username, firstName, lastName, password } = req.body;
-    const { companyId, token } = req.params;
+    const { username, firstName, lastName, password, token } = req.body;
+    const { companyId } = req.params;
 
     const { JWT_SECRET } = process.env;
 
@@ -358,6 +358,7 @@ const AddEmployeeToCompany: RequestHandler = async (
     try {
         session = await mongoose.startSession();
         session.startTransaction();
+
         const { email, invitedBy } = validateToken(token) as { email: string; invitedBy: string };
         const existingUser = await User.findOne({ email }).exec();
 

@@ -36,21 +36,21 @@ const addEmployeeValidator = [
         .withMessage('Confirm Password cannot be empty')
         .isString(),
 
+    body('token')
+        .trim()
+        .isString()
+        .withMessage('Token is not a string')
+        .notEmpty()
+        .withMessage('Token cannot be empty')
+        .isLength({ min: 64, max: 64 })
+        .withMessage('Token string must be 64 characters long'),
+
     param('companyId')
         .trim()
         .isString()
         .withMessage('Company Id is a string')
         .notEmpty()
         .withMessage('Company Id is required'),
-
-    param('token')
-        .trim()
-        .isString()
-        .withMessage('Token is a string')
-        .notEmpty()
-        .withMessage('Token cannot be empty')
-        .isLength({ min: 64, max: 64 })
-        .withMessage('Token string must be 64 characters long'),
 
     body('confirmPassword').custom((value, { req }) => {
         if (value !== req.body.password) {
