@@ -15,7 +15,7 @@ router.get('/:id', getCompanyById);
 router.post('/', addCompany);
 router.patch('/:id', updateCompanyById);
 
-router.get(
+router.post(
     '/:companyId/invite-employees',
     userRouteMiddlewares.verifyHeaderToken,
     routeValidators.emailArrayValidator,
