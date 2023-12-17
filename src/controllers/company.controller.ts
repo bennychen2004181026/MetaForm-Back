@@ -1,10 +1,14 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 
 import Company from '@models/company.model';
 import { ICompany } from '@interfaces/company';
+import { IUser } from '@interfaces/users';
 import Errors from '@errors/ClassError';
 import { sendEmail, emailTemplates } from '@utils/emailService';
+import { validateToken } from '@utils/jwt';
+import User from '@models/user.model';
 
 /**
  * @swagger
@@ -336,8 +340,99 @@ const inviteEmployees: RequestHandler = async (
     }
 };
 
+const AddEmployeeToCompany: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
+    const { username, firstName, lastName, password } = req.body;
+    const { companyId, token } = req.params;
+
+    const { JWT_SECRET } = process.env;
+
+    if (!JWT_SECRET) {
+        return next(new Errors.EnvironmentError('Missing environment variables', 'env'));
+    }
+
+    let session: mongoose.ClientSession | null = null;
+    try {
+        session = await mongoose.startSession();
+        session.startTransaction();
+        const { email, invitedBy } = validateToken(token) as { email: string; invitedBy: string };
+        const existingUser = await User.findOne({ email }).exec();
+
+        if (existingUser) {
+            throw new Errors.ValidationError('Email already in use', 'Email');
+        }
+
+        const inviter = await User.findById({ invitedBy }).exec();
+
+        if (!inviter || !inviter.company) {
+            throw new Errors.ValidationError('Inviter or company does not exist', 'Super_admin');
+        }
+
+        const currentCompany = await Company.findById({ companyId }).exec();
+
+        if (
+            !currentCompany ||
+            !currentCompany._id ||
+            !currentCompany.employees ||
+            currentCompany.id !== companyId
+        ) {
+            throw new Errors.ValidationError(
+                'Company is not exist or not match with companyId in params',
+                'company',
+            );
+        }
+
+        const partialProperties: Partial<IUser> = {
+            username,
+            firstName,
+            lastName,
+            email,
+            password,
+            role: 'employee',
+            isAccountComplete: true,
+            isActive: true,
+            company: currentCompany._id,
+            invitedBy: inviter._id,
+        };
+
+        const newUser: IUser = new User(partialProperties);
+        const savedUser: IUser = await newUser.save();
+        const userJson: IUser = savedUser.toJSON();
+
+        currentCompany.employees.push(savedUser._id);
+
+        const updatedCompany: ICompany = await currentCompany.save();
+        const companyJson: ICompany = updatedCompany.toJSON();
+
+        await session.commitTransaction();
+        session.endSession();
+
+        return res.status(201).json({
+            message: 'Successfully create employee account',
+            companyJson,
+            userJson,
+        });
+    } catch (error: unknown) {
+        if (session) {
+            await session.abortTransaction();
+            session.endSession();
+        }
+        next(error);
+    }
+};
+
 /*
  * delete function is not implemented as it won't be applicable for companies
  */
 
-export { addCompany, getCompanyById, getAllCompanies, updateCompanyById, inviteEmployees };
+export {
+    addCompany,
+    getCompanyById,
+    getAllCompanies,
+    updateCompanyById,
+    inviteEmployees,
+    AddEmployeeToCompany,
+};
