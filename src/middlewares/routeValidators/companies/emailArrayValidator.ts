@@ -4,6 +4,7 @@ import Errors from '@errors/ClassError/index';
 
 const emailArrayValidator = [
     body('emails')
+        .trim()
         .isArray()
         .withMessage('Emails must be an array')
         .custom(emails => emails.length > 0)
