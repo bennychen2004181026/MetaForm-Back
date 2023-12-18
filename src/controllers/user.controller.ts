@@ -5,12 +5,16 @@ import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 
 import { sendEmail, emailTemplates } from '@utils/emailService';
+import { getSignedUrl as getCloudFrontSignedUrl } from '@aws-sdk/cloudfront-signer';
 import Errors from '@errors/ClassError';
 import User from '@models/user.model';
 import Company from '@models/company.model';
 import { IUser } from '@interfaces/users';
 import { ICompany } from '@interfaces/company';
 import { generateTokenHelper } from '@utils/jwt';
+import s3Client from '@utils/s3Client';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
 
 const sendVerificationEmail: RequestHandler = async (
     req: Request,
@@ -313,6 +317,82 @@ const resetPassword: RequestHandler = async (
     }
 };
 
+const getPresignedUrl: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
+    const { userId } = res.locals;
+
+    if (!userId || userId.trim().length === 0) {
+        throw new Errors.NotFoundError('User not found', 'userId');
+    }
+
+    const key = `${userId}/companyLogo-${Date.now()}.jpeg`;
+    const { S3_BUCKET_NAME } = process.env;
+
+    if (!S3_BUCKET_NAME) {
+        throw new Errors.EnvironmentError(
+            'AWS configuration not set in environment variables',
+            'env variables',
+        );
+    }
+    try {
+        const command = new PutObjectCommand({
+            Bucket: S3_BUCKET_NAME,
+            Key: key,
+            ContentType: 'image/jpeg',
+        });
+
+        const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 600 });
+
+        res.status(200).json({ url: presignedUrl, key });
+    } catch (error: unknown) {
+        next(error);
+    }
+};
+
+const getCloudFrontPresignedUrl: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
+    const { key } = req.query;
+
+    if (!key) {
+        throw new Errors.ValidationError('S3 key not found in param', 's3key');
+    }
+
+    if (typeof key !== 'string') {
+        throw new Errors.ValidationError('Key must be a string', 's3key');
+    }
+
+    const { DISTRIBUTION_DOMAIN_NAME, CLOUDFRONT_PRIVATE_KEY, CLOUDFRONT_KEYPAIR_ID } = process.env;
+
+    if (!DISTRIBUTION_DOMAIN_NAME || !CLOUDFRONT_PRIVATE_KEY || !CLOUDFRONT_KEYPAIR_ID) {
+        throw new Errors.EnvironmentError(
+            'AWS configuration not set in environment variables',
+            'env variables',
+        );
+    }
+
+    const url = `${DISTRIBUTION_DOMAIN_NAME}/${key}`;
+    const date = new Date(Date.now() + 1000 * 60 * 60 * 24 * 365 * 10); // 10 years
+
+    try {
+        const cloudFrontSignedUrl = getCloudFrontSignedUrl({
+            url,
+            keyPairId: CLOUDFRONT_KEYPAIR_ID,
+            privateKey: CLOUDFRONT_PRIVATE_KEY,
+            dateLessThan: date.toISOString(),
+        });
+
+        res.status(200).json({ cloudFrontSignedUrl });
+    } catch (error: unknown) {
+        next(error);
+    }
+};
+
 export default {
     sendVerificationEmail,
     prepareAccountCreation,
@@ -321,4 +401,6 @@ export default {
     login,
     forgotPassword,
     resetPassword,
+    getPresignedUrl,
+    getCloudFrontPresignedUrl,
 };
