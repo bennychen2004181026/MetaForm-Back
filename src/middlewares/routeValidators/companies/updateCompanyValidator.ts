@@ -3,18 +3,29 @@ import { Request, Response, NextFunction } from 'express';
 import Errors from '@errors/ClassError/index';
 
 const updateCompanyValidator = [
-    body('companyName').trim().isString().notEmpty().withMessage('Company name is required'),
+    body('companyName')
+        .trim()
+        .isString()
+        .withMessage('Company Name should be a string')
+        .optional({ checkFalsy: true }),
 
     body('abn')
         .trim()
-        .notEmpty()
-        .withMessage('ABN is required')
         .isLength({ min: 11, max: 11 })
-        .withMessage('ABN should be exactly 11 digits'),
+        .withMessage('ABN should be exactly 11 digits')
+        .optional({ checkFalsy: true }),
 
-    body('logo').trim().optional().isString(),
+    body('logo')
+        .trim()
+        .optional({ checkFalsy: true })
+        .isString()
+        .withMessage('Logo should be a url string'),
 
-    body('industry').trim().isString().notEmpty().withMessage('Industry is required'),
+    body('industry')
+        .trim()
+        .optional({ checkFalsy: true })
+        .isString()
+        .withMessage('Industry should be a url string'),
 
     param('companyId')
         .trim()
@@ -30,7 +41,9 @@ const updateCompanyValidator = [
                 .array()
                 .map(err => err.msg)
                 .join(', ');
-            return next(new Errors.ValidationError(errorMessages, 'Email Array Verification'));
+            return next(
+                new Errors.ValidationError(errorMessages, 'Update Company Profile Verification'),
+            );
         }
         next();
     },

@@ -6,6 +6,7 @@ import {
     updateCompanyById,
     inviteEmployees,
     AddEmployeeToCompany,
+    updateCompany,
 } from '@controllers/company.controller';
 import routeValidators from '@middleware/routeValidators/companies';
 import userRouteMiddlewares from '@middleware/usersRoute';
@@ -27,6 +28,13 @@ router.post(
     '/:companyId/add-employees',
     routeValidators.addEmployeeValidator,
     AddEmployeeToCompany,
+);
+
+router.post(
+    '/:companyId/update-company-profile',
+    userRouteMiddlewares.verifyHeaderToken,
+    routeValidators.updateCompanyValidator,
+    updateCompany,
 );
 
 export default router;

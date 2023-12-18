@@ -460,7 +460,11 @@ const updateCompany: RequestHandler = async (
 
         const existedCompany: ICompany | null = await Company.findById(companyId).exec();
 
-        if (!existedCompany || user.company !== existedCompany._id) {
+        if (
+            !existedCompany ||
+            !user.company ||
+            user.company.toString() !== existedCompany._id.toString()
+        ) {
             throw new Errors.ValidationError('Invalid companyId param', 'companyId param');
         }
 

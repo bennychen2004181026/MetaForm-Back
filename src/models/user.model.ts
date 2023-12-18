@@ -1,15 +1,15 @@
 import bcrypt from 'bcrypt';
 import mongoose, { CallbackWithoutResultAndOptionalError, Schema } from 'mongoose';
 import { MembershipType, Role, IUser } from '@interfaces/users';
-import Errors from '@errors/ClassError'
+import Errors from '@errors/ClassError';
 
 const UserSchema: Schema = new Schema(
     {
         username: {
             type: String,
             required: true,
-            unique:false,
-            index:false,
+            unique: false,
+            index: false,
             minlength: 5,
             maxlength: 20,
         },
@@ -37,7 +37,8 @@ const UserSchema: Schema = new Schema(
                     const regex = /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^_&*]).{8,32}$/;
                     return regex.test(value);
                 },
-                message: (): string => 'Password should contain at least one number, one lowercase letter, one uppercase letter and one special character (@,#,$,%,^,_,&,*,!).'
+                message: (): string =>
+                    'Password should contain at least one number, one lowercase letter, one uppercase letter and one special character (@,#,$,%,^,_,&,*,!).',
             },
         },
         createdForms: [
@@ -50,7 +51,7 @@ const UserSchema: Schema = new Schema(
             type: String,
             enum: Object.values(Role),
             default: Role.SuperAdmin,
-            required: true
+            required: true,
         },
         company: {
             type: Schema.Types.ObjectId,
@@ -59,7 +60,7 @@ const UserSchema: Schema = new Schema(
         isAccountComplete: {
             type: Boolean,
             require: true,
-            default: false
+            default: false,
         },
         invitedBy: {
             type: Schema.Types.ObjectId,
@@ -86,7 +87,7 @@ const UserSchema: Schema = new Schema(
             type: String,
             enum: Object.values(MembershipType),
             default: MembershipType.Basic,
-            require: true
+            require: true,
         },
         currentSubscription: {
             type: Schema.Types.ObjectId,
@@ -101,7 +102,7 @@ const UserSchema: Schema = new Schema(
     },
     {
         timestamps: true, // Enables automatic timestamps (createdAt, updatedAt)
-    }
+    },
 );
 
 UserSchema.pre('save', async function (next: CallbackWithoutResultAndOptionalError) {
@@ -116,12 +117,21 @@ UserSchema.pre('save', async function (next: CallbackWithoutResultAndOptionalErr
             const hash = await bcrypt.hash(this.password, salt);
             this.password = hash;
             next();
-        }
-        catch (err: unknown) {
+        } catch (err: unknown) {
             if (err instanceof Error) {
-                return next(new Errors.DatabaseError('An error occurred while hashing the password', 'Database'));
+                return next(
+                    new Errors.DatabaseError(
+                        'An error occurred while hashing the password',
+                        'Database',
+                    ),
+                );
             }
-            return next(new Errors.DatabaseError('An unknown error occurred while hashing the password', 'Database'));
+            return next(
+                new Errors.DatabaseError(
+                    'An unknown error occurred while hashing the password',
+                    'Database',
+                ),
+            );
         }
     }
 });
@@ -129,12 +139,13 @@ UserSchema.pre('save', async function (next: CallbackWithoutResultAndOptionalErr
 UserSchema.methods.toJSON = function () {
     const obj = this.toObject();
     delete obj.password;
+    delete obj.__v;
     return obj;
 };
 
 if (mongoose.models.User) {
     delete mongoose.models.User;
-  }
+}
 
 const User = mongoose.model<IUser>('User', UserSchema);
 

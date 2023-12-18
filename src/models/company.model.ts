@@ -46,6 +46,12 @@ CompanySchema.pre('save', async next => {
     next();
 });
 
+CompanySchema.methods.toJSON = function () {
+    const obj = this.toObject();
+    delete obj.__v;
+    return obj;
+};
+
 const Company = model<ICompany>('Company', CompanySchema);
 
 export default Company;
