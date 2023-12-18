@@ -1,8 +1,8 @@
-import { body, validationResult } from 'express-validator';
+import { body, param, validationResult } from 'express-validator';
 import { Request, Response, NextFunction } from 'express';
 import Errors from '@errors/ClassError/index';
 
-const completeAccountValidator = [
+const updateCompanyValidator = [
     body('companyName').trim().isString().notEmpty().withMessage('Company name is required'),
 
     body('abn')
@@ -16,17 +16,24 @@ const completeAccountValidator = [
 
     body('industry').trim().isString().notEmpty().withMessage('Industry is required'),
 
-    (req: Request, res: Response, next: NextFunction): void => {
+    param('companyId')
+        .trim()
+        .isString()
+        .withMessage('Company Id is a string')
+        .notEmpty()
+        .withMessage('Company Id is required'),
+
+    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             const errorMessages = errors
                 .array()
                 .map(err => err.msg)
                 .join(', ');
-            return next(new Errors.ValidationError(errorMessages, 'Company1 information'));
+            return next(new Errors.ValidationError(errorMessages, 'Email Array Verification'));
         }
         next();
     },
 ];
 
-export default completeAccountValidator;
+export default updateCompanyValidator;
