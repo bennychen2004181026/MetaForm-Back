@@ -431,6 +431,67 @@ const AddEmployeeToCompany: RequestHandler = async (
     }
 };
 
+const updateCompany: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
+    const { userId } = res.locals;
+    const { companyId } = req.params;
+    const updateData = req.body;
+
+    if (!userId || userId.trim().length === 0) {
+        throw new Errors.NotFoundError('User not found', 'userId');
+    }
+    try {
+        const user: IUser | null = await User.findById(userId).exec();
+
+        if (!user) {
+            throw new Errors.NotFoundError(
+                'User not found in the database',
+                'user not found in database',
+            );
+        }
+        const { role } = user;
+
+        if (role !== 'super_admin') {
+            throw new Errors.ValidationError('Invalid Authorization', 'Super_admin');
+        }
+
+        const existedCompany: ICompany | null = await Company.findById(companyId).exec();
+
+        if (!existedCompany || user.company !== existedCompany._id) {
+            throw new Errors.ValidationError('Invalid companyId param', 'companyId param');
+        }
+
+        const updateFields: { [key: string]: string } = {};
+        Object.keys(updateData).forEach(key => {
+            if (updateData[key]) {
+                updateFields[key] = updateData[key];
+            }
+        });
+
+        const updatedCompany: ICompany | null = await Company.findByIdAndUpdate(
+            companyId,
+            { $set: updateFields },
+            { new: true },
+        );
+        if (!updatedCompany) {
+            throw new Errors.DatabaseError(
+                'Error when updating company profile',
+                'updating company profile',
+            );
+        }
+        const companyJson = updatedCompany.toJSON();
+        return res.status(201).json({
+            message: 'Successfully update the company profile',
+            companyJson,
+        });
+    } catch (error: unknown) {
+        next(error);
+    }
+};
+
 /*
  * delete function is not implemented as it won't be applicable for companies
  */
@@ -442,4 +503,5 @@ export {
     updateCompanyById,
     inviteEmployees,
     AddEmployeeToCompany,
+    updateCompany,
 };
