@@ -3,9 +3,14 @@ import { Request, Response, NextFunction } from 'express';
 import Errors from '@errors/ClassError/index';
 
 const emailArrayValidator = [
-    body('emails').isArray().withMessage('Emails must be an array'),
+    body('emails')
+        .isArray()
+        .withMessage('Emails must be an array')
+        .custom(emails => emails.length > 0)
+        .withMessage('Emails array cannot be empty'),
 
     body('emails.*')
+        .trim()
         .notEmpty()
         .withMessage('Email is empty in the array')
         .isEmail()
