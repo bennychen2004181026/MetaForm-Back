@@ -41,9 +41,7 @@ const addEmployeeValidator = [
         .isString()
         .withMessage('Token is not a string')
         .notEmpty()
-        .withMessage('Token cannot be empty')
-        .isLength({ min: 64, max: 64 })
-        .withMessage('Token string must be 64 characters long'),
+        .withMessage('Token cannot be empty'),
 
     param('companyId')
         .trim()

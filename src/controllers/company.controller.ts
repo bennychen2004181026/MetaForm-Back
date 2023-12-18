@@ -282,6 +282,12 @@ const inviteEmployees: RequestHandler = async (
         return next(new Errors.EnvironmentError('Missing environment variables', 'env'));
     }
 
+    if (!userId) {
+        return next(
+            new Errors.EnvironmentError('Missing userId in res.locals', 'res.locals.userId'),
+        );
+    }
+
     try {
         const existedCompany = await Company.findById(companyId).exec();
         if (!existedCompany) {
@@ -360,28 +366,28 @@ const AddEmployeeToCompany: RequestHandler = async (
         session.startTransaction();
 
         const { email, invitedBy } = validateToken(token) as { email: string; invitedBy: string };
-        const existingUser = await User.findOne({ email }).exec();
+
+        if (!email || !invitedBy) {
+            throw new Errors.ValidationError('Missing email or invitedBy in jwt', 'jwt');
+        }
+
+        const existingUser = await User.findOne({ email }, null, { session }).exec();
 
         if (existingUser) {
             throw new Errors.ValidationError('Email already in use', 'Email');
         }
 
-        const inviter = await User.findById({ invitedBy }).exec();
+        const inviter = await User.findById(invitedBy, null, { session }).exec();
 
         if (!inviter || !inviter.company) {
             throw new Errors.ValidationError('Inviter or company does not exist', 'Super_admin');
         }
 
-        const currentCompany = await Company.findById({ companyId }).exec();
+        const currentCompany = await Company.findById(companyId, null, { session }).exec();
 
-        if (
-            !currentCompany ||
-            !currentCompany._id ||
-            !currentCompany.employees ||
-            currentCompany.id !== companyId
-        ) {
+        if (!currentCompany || !currentCompany.employees) {
             throw new Errors.ValidationError(
-                'Company is not exist or not match with companyId in params',
+                'Company is not exist or have empty employees array',
                 'company',
             );
         }
@@ -400,12 +406,12 @@ const AddEmployeeToCompany: RequestHandler = async (
         };
 
         const newUser: IUser = new User(partialProperties);
-        const savedUser: IUser = await newUser.save();
+        const savedUser: IUser = await newUser.save({ session });
         const userJson: IUser = savedUser.toJSON();
 
         currentCompany.employees.push(savedUser._id);
 
-        const updatedCompany: ICompany = await currentCompany.save();
+        const updatedCompany: ICompany = await currentCompany.save({ session });
         const companyJson: ICompany = updatedCompany.toJSON();
 
         await session.commitTransaction();
