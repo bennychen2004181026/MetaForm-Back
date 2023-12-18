@@ -2,7 +2,9 @@ import { Request, Response, NextFunction, RequestHandler } from 'express';
 import jwt from 'jsonwebtoken';
 
 import Company from '@models/company.model';
+import User from '@models/user.model';
 import { ICompany } from '@interfaces/company';
+import { IUser } from '@interfaces/users';
 import Errors from '@errors/ClassError';
 import { sendEmail, emailTemplates } from '@utils/emailService';
 
@@ -271,20 +273,36 @@ const inviteEmployees: RequestHandler = async (
 ): Promise<Response | void> => {
     const { emails } = req.body as { emails: string[] };
     const { companyId } = req.params as { companyId: string };
-    const { userId } = res.locals as { userId: string };
+    const { userId, role } = res.locals as { userId: string; role: string };
     const { NODE_ENV, JWT_SECRET, FRONT, EMAIL_USERNAME, SENDGRID_API_KEY } = process.env;
+
+    if (role !== 'super_admin' && role !== 'admin') {
+        throw new Errors.AuthorizationError(`Invalid Authorization: ${role}`, 'Role');
+    }
 
     if (!NODE_ENV || !JWT_SECRET || !FRONT || !EMAIL_USERNAME || !SENDGRID_API_KEY) {
         return next(new Errors.EnvironmentError('Missing environment variables', 'env'));
     }
 
-    if (!userId) {
+    if (!userId || !role) {
         return next(
-            new Errors.EnvironmentError('Missing userId in res.locals', 'res.locals.userId'),
+            new Errors.EnvironmentError(
+                'Missing userId or role in res.locals',
+                'res.locals.userId or role',
+            ),
         );
     }
 
     try {
+        const user: IUser | null = await User.findById(userId).exec();
+
+        if (!user) {
+            throw new Errors.NotFoundError(
+                'User not found in the database',
+                'user not found in database',
+            );
+        }
+
         const existedCompany = await Company.findById(companyId).exec();
         if (!existedCompany) {
             throw new Errors.NotFoundError(
@@ -292,6 +310,14 @@ const inviteEmployees: RequestHandler = async (
                 'Company not found',
             );
         }
+
+        if (!user.company || user.company.toString() !== existedCompany._id.toString()) {
+            throw new Errors.ValidationError(
+                'Company of user does not match the companyId param',
+                'companyId param',
+            );
+        }
+
         const { companyName } = existedCompany;
 
         const emailSendingPromises = emails.map(async (email: string) => {
