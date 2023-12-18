@@ -278,6 +278,12 @@ const inviteEmployees: RequestHandler = async (
         return next(new Errors.EnvironmentError('Missing environment variables', 'env'));
     }
 
+    if (!userId) {
+        return next(
+            new Errors.EnvironmentError('Missing userId in res.locals', 'res.locals.userId'),
+        );
+    }
+
     try {
         const existedCompany = await Company.findById(companyId).exec();
         if (!existedCompany) {
