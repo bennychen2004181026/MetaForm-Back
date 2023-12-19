@@ -1,77 +1,97 @@
 import express, { Request, Response, NextFunction } from 'express';
 import passport from 'passport';
 import routeValidators from '@middleware/routeValidators/users';
-import userRouteMiddlewares from '@middleware/usersRoute'
+import userRouteMiddlewares from '@middleware/usersRoute';
 import userControllers from '@controllers/user.controller';
 import middlewares from '@middleware/index';
-import { IUser } from '@interfaces/users'
+import { IUser } from '@interfaces/users';
 
 const userRouter = express.Router();
 
-userRouter.post('/verify-email',
+userRouter.post(
+    '/verify-email',
     middlewares.alreadyLogin,
     routeValidators.emailValidator,
     routeValidators.checkUserExistence,
-    userControllers.sendVerificationEmail
+    userControllers.sendVerificationEmail,
 );
 
-userRouter.get('/verification/:token',
+userRouter.get(
+    '/verification/:token',
     userRouteMiddlewares.verifyToken,
-    userControllers.prepareAccountCreation
-)
+    userControllers.prepareAccountCreation,
+);
 
-userRouter.post('/create-account',
+userRouter.post(
+    '/create-account',
     middlewares.alreadyLogin,
     routeValidators.userInfosValidator,
     userControllers.createAccount,
     userRouteMiddlewares.generateToken,
-    userRouteMiddlewares.sendTokenAndUser
-)
+    userRouteMiddlewares.sendTokenAndUser,
+);
 
-userRouter.post('/:userId/completeAccount',
+userRouter.post(
+    '/:userId/completeAccount',
     userRouteMiddlewares.verifyUserId,
     userRouteMiddlewares.verifyHeaderToken,
     routeValidators.completeAccountValidator,
     userRouteMiddlewares.checkAccountCompletion,
-    userControllers.completeAccount
+    userControllers.completeAccount,
 );
 
-userRouter.post('/login',
+userRouter.post(
+    '/login',
     middlewares.alreadyLogin,
     routeValidators.loginValidator,
-    userControllers.login
-)
+    userControllers.login,
+);
 
-userRouter.post('/forgotPassword',
+userRouter.post(
+    '/forgotPassword',
     middlewares.alreadyLogin,
     routeValidators.forgotPasswordValidator,
-    userControllers.forgotPassword
-)
+    userControllers.forgotPassword,
+);
 
-userRouter.post('/resetPassword',
+userRouter.post(
+    '/resetPassword',
     routeValidators.resetPasswordValidator,
-    userControllers.resetPassword
-)
+    userControllers.resetPassword,
+);
 
-userRouter.get('/auth/google', (req: Request, res: Response, next: NextFunction) => {
-    next();
-}, passport.authenticate('google', { scope: ['profile', 'email'] }))
+userRouter.get(
+    '/auth/google',
+    (req: Request, res: Response, next: NextFunction) => {
+        next();
+    },
+    passport.authenticate('google', { scope: ['profile', 'email'] }),
+);
 
-userRouter.get('/auth/google/callback',
+userRouter.get(
+    '/auth/google/callback',
     passport.authenticate('google', { failureRedirect: '/users/login' }),
     (req: Request, res: Response, next: NextFunction): void => {
         try {
             const user = req.user as IUser;
-            res.locals.user = user
-            res.locals.userId = user._id
-            next()
-        }
-        catch (error) {
-            next(error)
+            res.locals.user = user;
+            res.locals.userId = user._id;
+            next();
+        } catch (error) {
+            next(error);
         }
     },
     userRouteMiddlewares.generateToken,
     userRouteMiddlewares.checkAccountCompletion,
     userRouteMiddlewares.sendTokenAndUser,
 );
-export default userRouter
+
+userRouter.get(
+    '/getPresignedUrl',
+    userRouteMiddlewares.verifyHeaderToken,
+    userControllers.getPresignedUrl,
+);
+
+userRouter.get('/getCloudFrontPresignedUrl', userControllers.getCloudFrontPresignedUrl);
+
+export default userRouter;

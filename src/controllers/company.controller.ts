@@ -9,7 +9,6 @@ import { IUser } from '@interfaces/users';
 import Errors from '@errors/ClassError';
 import { sendEmail, emailTemplates } from '@utils/emailService';
 import { validateToken } from '@utils/jwt';
-import User from '@models/user.model';
 
 /**
  * @swagger
