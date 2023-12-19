@@ -586,7 +586,7 @@ const promoteEmployee: RequestHandler = async (
     res: Response,
     next: NextFunction,
 ): Promise<Response | void> => {
-    const { role } = res.locals as { employeeIds: string[]; role: string };
+    const { role } = res.locals as { role: string };
     const { userId } = req.params;
 
     if (role !== 'super_admin') {
