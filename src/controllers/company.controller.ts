@@ -460,38 +460,19 @@ const updateCompany: RequestHandler = async (
     res: Response,
     next: NextFunction,
 ): Promise<Response | void> => {
-    const { userId } = res.locals;
+    const { userId, role } = res.locals;
     const { companyId } = req.params;
     const updateData = req.body;
 
-    if (!userId || userId.trim().length === 0) {
-        throw new Errors.NotFoundError('User not found', 'userId');
+    if (!userId || userId.trim().length === 0 || !role) {
+        throw new Errors.NotFoundError('UserId and role not found', 'userId and role');
     }
+
+    if (role !== 'super_admin') {
+        throw new Errors.ValidationError('Invalid Authorization', 'Super_admin');
+    }
+
     try {
-        const user: IUser | null = await User.findById(userId).exec();
-
-        if (!user) {
-            throw new Errors.NotFoundError(
-                'User not found in the database',
-                'user not found in database',
-            );
-        }
-        const { role } = user;
-
-        if (role !== 'super_admin') {
-            throw new Errors.ValidationError('Invalid Authorization', 'Super_admin');
-        }
-
-        const existedCompany: ICompany | null = await Company.findById(companyId).exec();
-
-        if (
-            !existedCompany ||
-            !user.company ||
-            user.company.toString() !== existedCompany._id.toString()
-        ) {
-            throw new Errors.ValidationError('Invalid companyId param', 'companyId param');
-        }
-
         const updateFields: { [key: string]: string } = {};
         Object.keys(updateData).forEach(key => {
             if (updateData[key]) {
@@ -504,12 +485,14 @@ const updateCompany: RequestHandler = async (
             { $set: updateFields },
             { new: true },
         );
+
         if (!updatedCompany) {
             throw new Errors.DatabaseError(
                 'Error when updating company profile',
                 'updating company profile',
             );
         }
+
         const companyJson = updatedCompany.toJSON();
         return res.status(201).json({
             message: 'Successfully update the company profile',
