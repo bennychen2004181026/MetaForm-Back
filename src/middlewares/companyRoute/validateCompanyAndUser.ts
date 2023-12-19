@@ -37,7 +37,7 @@ const validateCompanyAndUser: RequestHandler = async (
             throw new Errors.ValidationError('Invalid companyId param', 'companyId param');
         }
 
-        const employeeIds = existedCompany.employees.map(employee => employee.toString());
+        const employeeIds: string[] = existedCompany.employees.map(employee => employee.toString());
 
         if (
             !user.company ||
@@ -50,8 +50,9 @@ const validateCompanyAndUser: RequestHandler = async (
             );
         }
 
-        res.locals.userId = userId;
-        res.locals.role = role;
+        res.locals.userId = userId as string;
+        res.locals.role = role as string;
+        res.locals.employeeIds = employeeIds as string[];
         next();
     } catch (error) {
         next(error);
