@@ -32,7 +32,7 @@ router.post(
     AddEmployeeToCompany,
 );
 
-router.post(
+router.patch(
     '/:companyId/update-company-profile',
     userRouteMiddlewares.verifyHeaderToken,
     routeValidators.updateCompanyValidator,
