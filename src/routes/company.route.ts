@@ -7,9 +7,11 @@ import {
     inviteEmployees,
     AddEmployeeToCompany,
     updateCompany,
+    getEmployeesFromCompany,
 } from '@controllers/company.controller';
 import routeValidators from '@middleware/routeValidators/companies';
 import userRouteMiddlewares from '@middleware/usersRoute';
+import companyRouteMiddlewares from '@middleware/companyRoute';
 
 const router = Router();
 router.get('/', getAllCompanies);
@@ -35,6 +37,13 @@ router.post(
     userRouteMiddlewares.verifyHeaderToken,
     routeValidators.updateCompanyValidator,
     updateCompany,
+);
+
+router.get(
+    '/:companyId/get-all-employees',
+    userRouteMiddlewares.verifyHeaderToken,
+    companyRouteMiddlewares.validateCompanyAndUser,
+    getEmployeesFromCompany,
 );
 
 export default router;
