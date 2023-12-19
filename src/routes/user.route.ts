@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import passport from 'passport';
 import routeValidators from '@middleware/routeValidators/users';
 import userRouteMiddlewares from '@middleware/usersRoute';
+
 import userControllers from '@controllers/user.controller';
 import middlewares from '@middleware/index';
 import { IUser } from '@interfaces/users';
@@ -86,4 +87,13 @@ userRouter.get(
     userRouteMiddlewares.checkAccountCompletion,
     userRouteMiddlewares.sendTokenAndUser,
 );
+
+userRouter.get(
+    '/getPresignedUrl',
+    userRouteMiddlewares.verifyHeaderToken,
+    userControllers.getPresignedUrl,
+);
+
+userRouter.get('/getCloudFrontPresignedUrl', userControllers.getCloudFrontPresignedUrl);
+
 export default userRouter;

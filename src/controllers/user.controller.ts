@@ -5,12 +5,16 @@ import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 
 import { sendEmail, emailTemplates } from '@utils/emailService';
+import { getSignedUrl as getCloudFrontSignedUrl } from '@aws-sdk/cloudfront-signer';
 import Errors from '@errors/ClassError';
 import User from '@models/user.model';
 import Company from '@models/company.model';
 import { IUser } from '@interfaces/users';
 import { ICompany } from '@interfaces/company';
 import { generateTokenHelper } from '@utils/jwt';
+import s3Client from '@utils/s3Client';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
 
 const sendVerificationEmail: RequestHandler = async (
     req: Request,
@@ -20,9 +24,10 @@ const sendVerificationEmail: RequestHandler = async (
     try {
         const { email, username } = req.body;
 
-        const { NODE_ENV, JWT_SECRET, FRONT, EMAIL_USERNAME, SENDGRID_API_KEY } = process.env;
+        const { NODE_ENV, JWT_SECRET, APP_URL_LOCAL, EMAIL_USERNAME, SENDGRID_API_KEY } =
+            process.env;
 
-        if (!NODE_ENV || !JWT_SECRET || !FRONT || !EMAIL_USERNAME || !SENDGRID_API_KEY) {
+        if (!NODE_ENV || !JWT_SECRET || !APP_URL_LOCAL || !EMAIL_USERNAME || !SENDGRID_API_KEY) {
             throw new Errors.EnvironmentError('Missing environment variables', 'env');
         }
 
@@ -30,11 +35,11 @@ const sendVerificationEmail: RequestHandler = async (
 
         let verificationLink: string;
         if (NODE_ENV === 'production') {
-            verificationLink = `http://localhost:${FRONT}/users/verification/${verificationToken}`;
+            verificationLink = `${APP_URL_LOCAL}/users/verification/${verificationToken}`;
         } else if (NODE_ENV === 'test') {
-            verificationLink = `http://localhost:${FRONT}/users/verification/${verificationToken}`;
+            verificationLink = `${APP_URL_LOCAL}/users/verification/${verificationToken}`;
         } else {
-            verificationLink = `http://localhost:${FRONT}/users/verification/${verificationToken}`;
+            verificationLink = `${APP_URL_LOCAL}/users/verification/${verificationToken}`;
         }
 
         const emailContent = emailTemplates.verification(verificationLink);
@@ -227,9 +232,9 @@ const forgotPassword: RequestHandler = async (
     res: Response,
     next: NextFunction,
 ): Promise<Response | void> => {
-    const { NODE_ENV, JWT_SECRET, FRONT, EMAIL_USERNAME, SENDGRID_API_KEY } = process.env;
+    const { NODE_ENV, JWT_SECRET, APP_URL_LOCAL, EMAIL_USERNAME, SENDGRID_API_KEY } = process.env;
 
-    if (!NODE_ENV || !JWT_SECRET || !FRONT || !EMAIL_USERNAME || !SENDGRID_API_KEY) {
+    if (!NODE_ENV || !JWT_SECRET || !APP_URL_LOCAL || !EMAIL_USERNAME || !SENDGRID_API_KEY) {
         return next(new Errors.EnvironmentError('Missing environment variables', 'env'));
     }
 
@@ -238,11 +243,11 @@ const forgotPassword: RequestHandler = async (
 
     let resetLink: string;
     if (NODE_ENV === 'production') {
-        resetLink = `http://localhost:${FRONT}/users/resetPassword/${resetToken}`;
+        resetLink = `${APP_URL_LOCAL}/users/resetPassword/${resetToken}`;
     } else if (NODE_ENV === 'test') {
-        resetLink = `http://localhost:${FRONT}/users/resetPassword/${resetToken}`;
+        resetLink = `${APP_URL_LOCAL}/users/resetPassword/${resetToken}`;
     } else {
-        resetLink = `http://localhost:${FRONT}/users/resetPassword/${resetToken}`;
+        resetLink = `${APP_URL_LOCAL}/users/resetPassword/${resetToken}`;
     }
 
     try {
@@ -313,6 +318,82 @@ const resetPassword: RequestHandler = async (
     }
 };
 
+const getPresignedUrl: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
+    const { userId } = res.locals;
+
+    if (!userId || userId.trim().length === 0) {
+        throw new Errors.NotFoundError('User not found', 'userId');
+    }
+
+    const key = `${userId}/companyLogo-${Date.now()}.jpeg`;
+    const { S3_BUCKET_NAME } = process.env;
+
+    if (!S3_BUCKET_NAME) {
+        throw new Errors.EnvironmentError(
+            'AWS configuration not set in environment variables',
+            'env variables',
+        );
+    }
+    try {
+        const command = new PutObjectCommand({
+            Bucket: S3_BUCKET_NAME,
+            Key: key,
+            ContentType: 'image/jpeg',
+        });
+
+        const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 600 });
+
+        res.status(200).json({ url: presignedUrl, key });
+    } catch (error: unknown) {
+        next(error);
+    }
+};
+
+const getCloudFrontPresignedUrl: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
+    const { key } = req.query;
+
+    if (!key) {
+        throw new Errors.ValidationError('S3 key not found in param', 's3key');
+    }
+
+    if (typeof key !== 'string') {
+        throw new Errors.ValidationError('Key must be a string', 's3key');
+    }
+
+    const { DISTRIBUTION_DOMAIN_NAME, CLOUDFRONT_PRIVATE_KEY, CLOUDFRONT_KEYPAIR_ID } = process.env;
+
+    if (!DISTRIBUTION_DOMAIN_NAME || !CLOUDFRONT_PRIVATE_KEY || !CLOUDFRONT_KEYPAIR_ID) {
+        throw new Errors.EnvironmentError(
+            'AWS configuration not set in environment variables',
+            'env variables',
+        );
+    }
+
+    const url = `${DISTRIBUTION_DOMAIN_NAME}/${key}`;
+    const date = new Date(Date.now() + 1000 * 60 * 60 * 24 * 365 * 10); // 10 years
+
+    try {
+        const cloudFrontSignedUrl = getCloudFrontSignedUrl({
+            url,
+            keyPairId: CLOUDFRONT_KEYPAIR_ID,
+            privateKey: CLOUDFRONT_PRIVATE_KEY,
+            dateLessThan: date.toISOString(),
+        });
+
+        res.status(200).json({ cloudFrontSignedUrl });
+    } catch (error: unknown) {
+        next(error);
+    }
+};
+
 export default {
     sendVerificationEmail,
     prepareAccountCreation,
@@ -321,4 +402,6 @@ export default {
     login,
     forgotPassword,
     resetPassword,
+    getPresignedUrl,
+    getCloudFrontPresignedUrl,
 };
