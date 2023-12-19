@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 
 import Company from '@models/company.model';
 import User from '@models/user.model';
@@ -7,6 +8,8 @@ import { ICompany } from '@interfaces/company';
 import { IUser } from '@interfaces/users';
 import Errors from '@errors/ClassError';
 import { sendEmail, emailTemplates } from '@utils/emailService';
+import { validateToken } from '@utils/jwt';
+import User from '@models/user.model';
 
 /**
  * @swagger
@@ -368,8 +371,100 @@ const inviteEmployees: RequestHandler = async (
     }
 };
 
+const AddEmployeeToCompany: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
+    const { username, firstName, lastName, password, token } = req.body;
+    const { companyId } = req.params;
+
+    const { JWT_SECRET } = process.env;
+
+    if (!JWT_SECRET) {
+        return next(new Errors.EnvironmentError('Missing environment variables', 'env'));
+    }
+
+    let session: mongoose.ClientSession | null = null;
+    try {
+        session = await mongoose.startSession();
+        session.startTransaction();
+
+        const { email, invitedBy } = validateToken(token) as { email: string; invitedBy: string };
+
+        if (!email || !invitedBy) {
+            throw new Errors.ValidationError('Missing email or invitedBy in jwt', 'jwt');
+        }
+
+        const existingUser = await User.findOne({ email }, null, { session }).exec();
+
+        if (existingUser) {
+            throw new Errors.ValidationError('Email already in use', 'Email');
+        }
+
+        const inviter = await User.findById(invitedBy, null, { session }).exec();
+
+        if (!inviter || !inviter.company) {
+            throw new Errors.ValidationError('Inviter or company does not exist', 'Super_admin');
+        }
+
+        const currentCompany = await Company.findById(companyId, null, { session }).exec();
+
+        if (!currentCompany || !currentCompany.employees) {
+            throw new Errors.ValidationError(
+                'Company is not exist or have empty employees array',
+                'company',
+            );
+        }
+
+        const partialProperties: Partial<IUser> = {
+            username,
+            firstName,
+            lastName,
+            email,
+            password,
+            role: 'employee',
+            isAccountComplete: true,
+            isActive: true,
+            company: currentCompany._id,
+            invitedBy: inviter._id,
+        };
+
+        const newUser: IUser = new User(partialProperties);
+        const savedUser: IUser = await newUser.save({ session });
+        const userJson: IUser = savedUser.toJSON();
+
+        currentCompany.employees.push(savedUser._id);
+
+        const updatedCompany: ICompany = await currentCompany.save({ session });
+        const companyJson: ICompany = updatedCompany.toJSON();
+
+        await session.commitTransaction();
+        session.endSession();
+
+        return res.status(201).json({
+            message: 'Successfully create employee account',
+            companyJson,
+            userJson,
+        });
+    } catch (error: unknown) {
+        if (session) {
+            await session.abortTransaction();
+            session.endSession();
+        }
+        next(error);
+    }
+};
+
 /*
  * delete function is not implemented as it won't be applicable for companies
  */
 
-export { addCompany, getCompanyById, getAllCompanies, updateCompanyById, inviteEmployees };
+export {
+    addCompany,
+    getCompanyById,
+    getAllCompanies,
+    updateCompanyById,
+    inviteEmployees,
+    AddEmployeeToCompany,
+};

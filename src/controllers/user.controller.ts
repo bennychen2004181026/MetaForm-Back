@@ -135,7 +135,7 @@ const completeAccount: RequestHandler = async (
             throw new Errors.NotFoundError('User not found', 'userId');
         }
 
-        const user = await User.findById(userId).exec();
+        const user = await User.findById(userId, null, { session }).exec();
 
         if (!user) {
             throw new Errors.NotFoundError(
@@ -159,12 +159,12 @@ const completeAccount: RequestHandler = async (
             employees: [user._id],
         });
 
-        const updatedCompany: ICompany = await companyInfo.save();
+        const updatedCompany: ICompany = await companyInfo.save({ session });
 
         user.company = updatedCompany._id;
         user.isAccountComplete = true;
         user.isActive = true;
-        const updatedUser: IUser = await user.save();
+        const updatedUser: IUser = await user.save({ session });
         const userJson: IUser = updatedUser.toJSON();
 
         await session.commitTransaction();
