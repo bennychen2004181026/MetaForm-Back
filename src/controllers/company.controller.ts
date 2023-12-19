@@ -581,11 +581,52 @@ const getEmployeesFromCompany: RequestHandler = async (
     }
 };
 
+const promoteEmployee: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
+    const { role } = res.locals as { employeeIds: string[]; role: string };
+    const { userId } = req.params;
+
+    if (role !== 'super_admin') {
+        throw new Errors.ValidationError(
+            'Invalid Authorization,require super admin',
+            'Super_admin',
+        );
+    }
+
+    try {
+        const targetUser: IUser | null = await User.findById(userId).exec();
+
+        if (!targetUser) {
+            throw new Errors.DatabaseError('Target user not found', 'Target user');
+        }
+
+        const targetUserRole = targetUser.role;
+
+        if (targetUserRole !== 'employee') {
+            throw new Errors.BusinessLogicError('Target user is not employee', 'Target user');
+        }
+        targetUser.role = 'admin';
+        const updatedUser: IUser = await targetUser.save();
+        const userJson: IUser = updatedUser.toJSON();
+        const updatedRole = updatedUser.role;
+        return res.status(201).json({
+            message: 'Successfully promote employee to admin',
+            userJson,
+            updatedRole,
+        });
+    } catch (error: unknown) {
+        next(error);
+    }
+};
+
 /*
  * delete function is not implemented as it won't be applicable for companies
  */
 
-export {
+export default {
     addCompany,
     getCompanyById,
     getAllCompanies,
@@ -594,4 +635,5 @@ export {
     AddEmployeeToCompany,
     updateCompany,
     getEmployeesFromCompany,
+    promoteEmployee,
 };
