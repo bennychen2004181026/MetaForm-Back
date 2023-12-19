@@ -37,4 +37,11 @@ router.get(
     companyControllers.getEmployeesFromCompany,
 );
 
+router.post(
+    '/:companyId/users/:userId/promote-employee',
+    userRouteMiddlewares.verifyHeaderToken,
+    companyRouteMiddlewares.validateCompanyAndUser,
+    companyControllers.promoteEmployee,
+);
+
 export default router;

@@ -586,7 +586,7 @@ const promoteEmployee: RequestHandler = async (
     res: Response,
     next: NextFunction,
 ): Promise<Response | void> => {
-    const { role } = res.locals as { employeeIds: string[]; role: string };
+    const { role } = res.locals as { role: string };
     const { userId } = req.params;
 
     if (role !== 'super_admin') {
@@ -605,7 +605,7 @@ const promoteEmployee: RequestHandler = async (
 
         const targetUserRole = targetUser.role;
 
-        if (targetUserRole !== 'employee') {
+        if (!targetUserRole || targetUserRole !== 'employee') {
             throw new Errors.BusinessLogicError('Target user is not employee', 'Target user');
         }
         targetUser.role = 'admin';
