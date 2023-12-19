@@ -526,7 +526,10 @@ const getEmployeesFromCompany: RequestHandler = async (
     const { employeeIds, role } = res.locals as { employeeIds: string[]; role: string };
 
     if (role !== 'super_admin' && role !== 'admin') {
-        throw new Errors.ValidationError('Invalid Authorization', 'Super_admin');
+        throw new Errors.ValidationError(
+            'Invalid Authorization,require,super admin and admin',
+            'Super_admin and admin',
+        );
     }
     try {
         const fetchEmployeePromise = employeeIds.map(async (employee: string) => {
@@ -560,14 +563,14 @@ const getEmployeesFromCompany: RequestHandler = async (
 
         // All success
         if (failures.length === 0) {
-            res.status(201).json({
+            return res.status(201).json({
                 message: 'Successfully fetch all employee infos from the company',
                 userJSONsObject,
             });
         }
 
         // Successes and failures
-        res.status(201).json({
+        return res.status(201).json({
             message:
                 'Successfully fetch some of employee infos from the company, but some failed as well',
             userJSONsObject,
