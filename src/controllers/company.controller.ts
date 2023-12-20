@@ -622,6 +622,47 @@ const promoteEmployee: RequestHandler = async (
     }
 };
 
+const demoteAdmin: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
+    const { role } = res.locals as { role: string };
+    const { userId } = req.params;
+
+    if (role !== 'super_admin') {
+        throw new Errors.ValidationError(
+            'Invalid Authorization,require super admin',
+            'Super_admin',
+        );
+    }
+
+    try {
+        const targetUser: IUser | null = await User.findById(userId).exec();
+
+        if (!targetUser) {
+            throw new Errors.DatabaseError('Target user not found', 'Target user');
+        }
+
+        const targetUserRole = targetUser.role;
+
+        if (!targetUserRole || targetUserRole !== 'admin') {
+            throw new Errors.BusinessLogicError('Target user is not an admin', 'Target user');
+        }
+        targetUser.role = 'employee';
+        const updatedUser: IUser = await targetUser.save();
+        const userJson: IUser = updatedUser.toJSON();
+        const updatedRole = updatedUser.role;
+        return res.status(201).json({
+            message: 'Successfully demote admin to employee',
+            userJson,
+            updatedRole,
+        });
+    } catch (error: unknown) {
+        next(error);
+    }
+};
+
 /*
  * delete function is not implemented as it won't be applicable for companies
  */
@@ -636,4 +677,5 @@ export default {
     updateCompany,
     getEmployeesFromCompany,
     promoteEmployee,
+    demoteAdmin,
 };
