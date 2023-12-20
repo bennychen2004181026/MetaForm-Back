@@ -51,4 +51,11 @@ router.post(
     companyControllers.demoteAdmin,
 );
 
+router.post(
+    '/:companyId/users/:userId/deactivate',
+    userRouteMiddlewares.verifyHeaderToken,
+    companyRouteMiddlewares.validateCompanyAndUser,
+    companyControllers.deactivateUser,
+);
+
 export default router;
