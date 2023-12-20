@@ -228,6 +228,13 @@ const login: RequestHandler = async (
             throw new Errors.NotFoundError('User not found or User does not has password', 'User');
         }
 
+        if (user.isActive === false) {
+            throw new Errors.AuthorizationError(
+                'User already been deactivated',
+                'User is not active',
+            );
+        }
+
         const comparePassword: boolean = await bcrypt.compare(password, user.password);
 
         if (!comparePassword) {
@@ -236,10 +243,20 @@ const login: RequestHandler = async (
 
         const token: string = generateTokenHelper(user._id, user.role);
 
+        if (user.isAccountComplete === false || !user.company) {
+            return res.status(200).json({
+                message: 'Logged in successfully, but require binding company first',
+                token,
+                user,
+                isAccountComplete: user.isAccountComplete,
+            });
+        }
+
         return res.status(200).json({
             message: 'Logged in successfully',
             token,
             user,
+            isAccountComplete: user.isAccountComplete,
         });
     } catch (error: unknown) {
         return next(error);
