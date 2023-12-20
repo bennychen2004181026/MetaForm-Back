@@ -276,13 +276,29 @@ const inviteEmployees: RequestHandler = async (
     const { emails } = req.body as { emails: string[] };
     const { companyId } = req.params as { companyId: string };
     const { userId, role } = res.locals as { userId: string; role: string };
-    const { NODE_ENV, JWT_SECRET, APP_URL_LOCAL, EMAIL_USERNAME, SENDGRID_API_KEY } = process.env;
+    const {
+        NODE_ENV,
+        JWT_SECRET,
+        APP_URL_LOCAL,
+        APP_URL_TEST,
+        APP_URL_PRODUCTION,
+        EMAIL_USERNAME,
+        SENDGRID_API_KEY,
+    } = process.env;
 
     if (role !== 'super_admin' && role !== 'admin') {
         throw new Errors.AuthorizationError(`Invalid Authorization: ${role}`, 'Role');
     }
 
-    if (!NODE_ENV || !JWT_SECRET || !APP_URL_LOCAL || !EMAIL_USERNAME || !SENDGRID_API_KEY) {
+    if (
+        !NODE_ENV ||
+        !JWT_SECRET ||
+        !APP_URL_LOCAL ||
+        !APP_URL_TEST ||
+        !APP_URL_PRODUCTION ||
+        !EMAIL_USERNAME ||
+        !SENDGRID_API_KEY
+    ) {
         return next(new Errors.EnvironmentError('Missing environment variables', 'env'));
     }
 
@@ -294,6 +310,17 @@ const inviteEmployees: RequestHandler = async (
             ),
         );
     }
+
+    const appURLs: {
+        [key: string]: string | undefined;
+        development: string;
+        test: string;
+        production: string;
+    } = {
+        development: APP_URL_LOCAL,
+        test: APP_URL_TEST,
+        production: APP_URL_PRODUCTION,
+    };
 
     try {
         const user: IUser | null = await User.findById(userId).exec();
@@ -328,15 +355,7 @@ const inviteEmployees: RequestHandler = async (
                     expiresIn: '6h',
                 });
 
-                let verificationLink: string;
-                if (NODE_ENV === 'production') {
-                    verificationLink = `${APP_URL_LOCAL}/companies/${companyId}/invite-employees/${verificationToken}`;
-                } else if (NODE_ENV === 'test') {
-                    verificationLink = `${APP_URL_LOCAL}/companies/${companyId}/invite-employees/${verificationToken}`;
-                } else {
-                    verificationLink = `${APP_URL_LOCAL}/companies/${companyId}/invite-employees/${verificationToken}`;
-                }
-
+                const verificationLink = `${appURLs[NODE_ENV]}/companies/${companyId}/invite-employees/${verificationToken}`;
                 const emailContent = emailTemplates.employeeVerification(
                     verificationLink,
                     companyName,
