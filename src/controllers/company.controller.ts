@@ -682,6 +682,55 @@ const demoteAdmin: RequestHandler = async (
     }
 };
 
+const deactivateUser: RequestHandler = async (req, res, next) => {
+    const { role } = res.locals as { role: string };
+    const { userId } = req.params;
+
+    if (role !== 'super_admin' && role !== 'admin') {
+        return next(new Errors.AuthorizationError('Unauthorized to perform deactivation', 'Role'));
+    }
+
+    try {
+        const targetUser: IUser | null = await User.findById(userId).exec();
+        if (!targetUser) {
+            return next(new Errors.DatabaseError('Target user not found', 'Target user'));
+        }
+
+        if (role === 'super_admin') {
+            if (targetUser.role === 'super_admin') {
+                return next(
+                    new Errors.BusinessLogicError(
+                        'Cannot deactivate another super admin',
+                        'Target user',
+                    ),
+                );
+            }
+            targetUser.isActive = false;
+        }
+
+        if (role === 'admin') {
+            if (targetUser.role !== 'employee') {
+                return next(
+                    new Errors.BusinessLogicError(
+                        'Admin can only deactivate an employee',
+                        'Target user',
+                    ),
+                );
+            }
+            targetUser.isActive = false;
+        }
+
+        const updatedUser = await targetUser.save();
+        const userJson: IUser = updatedUser.toJSON();
+        res.status(200).json({
+            message: `Successfully deactivated ${targetUser.role}`,
+            userJson,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 /*
  * delete function is not implemented as it won't be applicable for companies
  */
@@ -697,4 +746,5 @@ export default {
     getEmployeesFromCompany,
     promoteEmployee,
     demoteAdmin,
+    deactivateUser,
 };
