@@ -24,23 +24,42 @@ const sendVerificationEmail: RequestHandler = async (
     try {
         const { email, username } = req.body;
 
-        const { NODE_ENV, JWT_SECRET, APP_URL_LOCAL, EMAIL_USERNAME, SENDGRID_API_KEY } =
-            process.env;
+        const {
+            NODE_ENV,
+            JWT_SECRET,
+            APP_URL_LOCAL,
+            APP_URL_TEST,
+            APP_URL_PRODUCTION,
+            EMAIL_USERNAME,
+            SENDGRID_API_KEY,
+        } = process.env;
 
-        if (!NODE_ENV || !JWT_SECRET || !APP_URL_LOCAL || !EMAIL_USERNAME || !SENDGRID_API_KEY) {
+        if (
+            !NODE_ENV ||
+            !JWT_SECRET ||
+            !APP_URL_LOCAL ||
+            !APP_URL_TEST ||
+            !APP_URL_PRODUCTION ||
+            !EMAIL_USERNAME ||
+            !SENDGRID_API_KEY
+        ) {
             throw new Errors.EnvironmentError('Missing environment variables', 'env');
         }
 
         const verificationToken = jwt.sign({ email, username }, JWT_SECRET, { expiresIn: '10m' });
 
-        let verificationLink: string;
-        if (NODE_ENV === 'production') {
-            verificationLink = `${APP_URL_LOCAL}/users/verification/${verificationToken}`;
-        } else if (NODE_ENV === 'test') {
-            verificationLink = `${APP_URL_LOCAL}/users/verification/${verificationToken}`;
-        } else {
-            verificationLink = `${APP_URL_LOCAL}/users/verification/${verificationToken}`;
-        }
+        const appURLs: {
+            [key: string]: string | undefined;
+            development: string;
+            test: string;
+            production: string;
+        } = {
+            development: APP_URL_LOCAL,
+            test: APP_URL_TEST,
+            production: APP_URL_PRODUCTION,
+        };
+
+        const verificationLink = `${appURLs[NODE_ENV]}/users/verification/${verificationToken}`;
 
         const emailContent = emailTemplates.verification(verificationLink);
 
@@ -232,24 +251,43 @@ const forgotPassword: RequestHandler = async (
     res: Response,
     next: NextFunction,
 ): Promise<Response | void> => {
-    const { NODE_ENV, JWT_SECRET, APP_URL_LOCAL, EMAIL_USERNAME, SENDGRID_API_KEY } = process.env;
+    const {
+        NODE_ENV,
+        JWT_SECRET,
+        APP_URL_LOCAL,
+        APP_URL_TEST,
+        APP_URL_PRODUCTION,
+        EMAIL_USERNAME,
+        SENDGRID_API_KEY,
+    } = process.env;
 
-    if (!NODE_ENV || !JWT_SECRET || !APP_URL_LOCAL || !EMAIL_USERNAME || !SENDGRID_API_KEY) {
+    if (
+        !NODE_ENV ||
+        !JWT_SECRET ||
+        !APP_URL_LOCAL ||
+        !APP_URL_TEST ||
+        !APP_URL_PRODUCTION ||
+        !EMAIL_USERNAME ||
+        !SENDGRID_API_KEY
+    ) {
         return next(new Errors.EnvironmentError('Missing environment variables', 'env'));
     }
+
+    const appURLs: {
+        [key: string]: string | undefined;
+        development: string;
+        test: string;
+        production: string;
+    } = {
+        development: APP_URL_LOCAL,
+        test: APP_URL_TEST,
+        production: APP_URL_PRODUCTION,
+    };
 
     const resetToken: string = crypto.randomBytes(32).toString('hex');
     const passwordExpires: Date = new Date(Date.now() + 600000);
 
-    let resetLink: string;
-    if (NODE_ENV === 'production') {
-        resetLink = `${APP_URL_LOCAL}/users/resetPassword/${resetToken}`;
-    } else if (NODE_ENV === 'test') {
-        resetLink = `${APP_URL_LOCAL}/users/resetPassword/${resetToken}`;
-    } else {
-        resetLink = `${APP_URL_LOCAL}/users/resetPassword/${resetToken}`;
-    }
-
+    const resetLink = `${appURLs[NODE_ENV]}/users/resetPassword/${resetToken}`;
     try {
         const { email } = req.body;
 
