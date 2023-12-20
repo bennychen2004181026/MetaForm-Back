@@ -58,4 +58,11 @@ router.post(
     companyControllers.deactivateUser,
 );
 
+router.post(
+    '/:companyId/users/:userId/reactivate',
+    userRouteMiddlewares.verifyHeaderToken,
+    companyRouteMiddlewares.validateCompanyAndUser,
+    companyControllers.reactivateUser,
+);
+
 export default router;

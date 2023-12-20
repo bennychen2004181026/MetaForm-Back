@@ -793,4 +793,5 @@ export default {
     promoteEmployee,
     demoteAdmin,
     deactivateUser,
+    reactivateUser,
 };
