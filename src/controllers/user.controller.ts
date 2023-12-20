@@ -248,7 +248,7 @@ const login: RequestHandler = async (
                 message: 'Logged in successfully, but require binding company first',
                 token,
                 user,
-                isAccountComplete: user.isAccountComplete,
+                isAccountComplete: false,
             });
         }
 
@@ -256,7 +256,7 @@ const login: RequestHandler = async (
             message: 'Logged in successfully',
             token,
             user,
-            isAccountComplete: user.isAccountComplete,
+            isAccountComplete: true,
         });
     } catch (error: unknown) {
         return next(error);
