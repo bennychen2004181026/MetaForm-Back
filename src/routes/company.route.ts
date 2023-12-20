@@ -44,4 +44,11 @@ router.post(
     companyControllers.promoteEmployee,
 );
 
+router.post(
+    '/:companyId/users/:userId/demote-employee',
+    userRouteMiddlewares.verifyHeaderToken,
+    companyRouteMiddlewares.validateCompanyAndUser,
+    companyControllers.demoteAdmin,
+);
+
 export default router;
