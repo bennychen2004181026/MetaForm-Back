@@ -40,7 +40,7 @@ router.patch(
 );
 
 router.get(
-    '/:companyId/get-all-employees',
+    '/:companyId/employees',
     userRouteMiddlewares.verifyHeaderToken,
     companyRouteMiddlewares.validateCompanyAndUser,
     getEmployeesFromCompany,
