@@ -542,7 +542,8 @@ const getEmployeesFromCompany: RequestHandler = async (
     res: Response,
     next: NextFunction,
 ): Promise<Response | void> => {
-    const { employeeIds, role } = res.locals as { employeeIds: string[]; role: string };
+    const { role } = res.locals as { role: string };
+    const { companyId } = req.params;
 
     if (role !== 'super_admin' && role !== 'admin') {
         throw new Errors.ValidationError(
@@ -551,49 +552,12 @@ const getEmployeesFromCompany: RequestHandler = async (
         );
     }
     try {
-        const fetchEmployeePromise = employeeIds.map(async (employee: string) => {
-            try {
-                const employeeInfo: IUser | null = await User.findById(employee).exec();
-                const userJSON: IUser = employeeInfo?.toJSON() as IUser;
-                return { userJSON, success: true };
-            } catch (error) {
-                return { userJSON: null, success: false, error: `${employee}` };
-            }
-        });
+        const company = await Company.findById(companyId).populate('employees').exec();
 
-        const results = await Promise.all(fetchEmployeePromise);
-
-        const successes = results.filter(result => result.success);
-        const failures = results.filter(result => !result.success);
-        const errorEmployeeIds = failures.map(result => result.error).join(', ');
-
-        const userJSONsObject: { [key: number]: IUser | null } = successes.reduce(
-            (obj, item, index) => ({
-                ...obj,
-                [index + 1]: item.userJSON,
-            }),
-            {} as { [key: number]: IUser | null },
-        );
-
-        // All failures
-        if (successes.length === 0) {
-            throw new Errors.DatabaseError(`Failed to fetch all employees: ${errorEmployeeIds}`);
-        }
-
-        // All success
-        if (failures.length === 0) {
-            return res.status(201).json({
-                message: 'Successfully fetch all employee infos from the company',
-                userJSONsObject,
-            });
-        }
-
-        // Successes and failures
+        const employeesArray = company?.employees;
         return res.status(201).json({
-            message:
-                'Successfully fetch some of employee infos from the company, but some failed as well',
-            userJSONsObject,
-            errorEmployeeIds,
+            message: 'Successfully fetch all of employee infos from the company',
+            employeesArray,
         });
     } catch (error: unknown) {
         next(error);
