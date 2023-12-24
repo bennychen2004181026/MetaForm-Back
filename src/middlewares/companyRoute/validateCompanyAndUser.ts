@@ -34,16 +34,10 @@ const validateCompanyAndUser: RequestHandler = async (
         const existedCompany: ICompany | null = await Company.findById(companyId).exec();
 
         if (!existedCompany || !existedCompany.employees) {
-            throw new Errors.ValidationError('Invalid companyId param', 'companyId param');
+            throw new Errors.ValidationError('Invalid companyId', 'companyId');
         }
 
-        const employeeIds: string[] = existedCompany.employees.map(employee => employee.toString());
-
-        if (
-            !user.company ||
-            user.company.toString() !== existedCompany._id.toString() ||
-            !employeeIds.includes(userId)
-        ) {
+        if (!user.company || user.company.toString() !== existedCompany._id.toString()) {
             throw new Errors.ValidationError(
                 'Company and employee does not match',
                 'company and employee',
@@ -52,7 +46,6 @@ const validateCompanyAndUser: RequestHandler = async (
 
         res.locals.userId = userId as string;
         res.locals.role = role as string;
-        res.locals.employeeIds = employeeIds as string[];
         next();
     } catch (error) {
         next(error);
