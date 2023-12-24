@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
 import Company from '@models/company.model';
 import User from '@models/user.model';
 import { ICompany } from '@interfaces/company';
-import { IUser } from '@interfaces/users';
+import { IUser, Role } from '@interfaces/users';
 import Errors from '@errors/ClassError';
 import { sendEmail, emailTemplates } from '@utils/emailService';
 import { validateToken } from '@utils/jwt';
@@ -286,10 +286,6 @@ const inviteEmployees: RequestHandler = async (
         SENDGRID_API_KEY,
     } = process.env;
 
-    if (role !== 'super_admin' && role !== 'admin') {
-        throw new Errors.AuthorizationError(`Invalid Authorization: ${role}`, 'Role');
-    }
-
     if (
         !NODE_ENV ||
         !JWT_SECRET ||
@@ -438,7 +434,10 @@ const AddEmployeeToCompany: RequestHandler = async (
         const inviter = await User.findById(invitedBy, null, { session }).exec();
 
         if (!inviter || !inviter.company) {
-            throw new Errors.ValidationError('Inviter or company does not exist', 'Super_admin');
+            throw new Errors.ValidationError(
+                'Inviter or company does not exist',
+                `${Role.SuperAdmin}`,
+            );
         }
 
         const currentCompany = await Company.findById(companyId, null, { session }).exec();
@@ -456,7 +455,7 @@ const AddEmployeeToCompany: RequestHandler = async (
             lastName,
             email,
             password,
-            role: 'employee',
+            role: Role.Employee,
             isAccountComplete: true,
             isActive: true,
             company: currentCompany._id,
@@ -502,10 +501,6 @@ const updateCompany: RequestHandler = async (
         throw new Errors.NotFoundError('UserId and role not found', 'userId and role');
     }
 
-    if (role !== 'super_admin') {
-        throw new Errors.ValidationError('Invalid Authorization', 'Super_admin');
-    }
-
     try {
         const updateFields: { [key: string]: string } = {};
         Object.keys(updateData).forEach(key => {
@@ -542,58 +537,15 @@ const getEmployeesFromCompany: RequestHandler = async (
     res: Response,
     next: NextFunction,
 ): Promise<Response | void> => {
-    const { employeeIds, role } = res.locals as { employeeIds: string[]; role: string };
+    const { companyId } = req.params;
 
-    if (role !== 'super_admin' && role !== 'admin') {
-        throw new Errors.ValidationError(
-            'Invalid Authorization,require,super admin and admin',
-            'Super_admin and admin',
-        );
-    }
     try {
-        const fetchEmployeePromise = employeeIds.map(async (employee: string) => {
-            try {
-                const employeeInfo: IUser | null = await User.findById(employee).exec();
-                const userJSON: IUser = employeeInfo?.toJSON() as IUser;
-                return { userJSON, success: true };
-            } catch (error) {
-                return { userJSON: null, success: false, error: `${employee}` };
-            }
-        });
+        const company = await Company.findById(companyId).populate('employees').exec();
 
-        const results = await Promise.all(fetchEmployeePromise);
-
-        const successes = results.filter(result => result.success);
-        const failures = results.filter(result => !result.success);
-        const errorEmployeeIds = failures.map(result => result.error).join(', ');
-
-        const userJSONsObject: { [key: number]: IUser | null } = successes.reduce(
-            (obj, item, index) => ({
-                ...obj,
-                [index + 1]: item.userJSON,
-            }),
-            {} as { [key: number]: IUser | null },
-        );
-
-        // All failures
-        if (successes.length === 0) {
-            throw new Errors.DatabaseError(`Failed to fetch all employees: ${errorEmployeeIds}`);
-        }
-
-        // All success
-        if (failures.length === 0) {
-            return res.status(201).json({
-                message: 'Successfully fetch all employee infos from the company',
-                userJSONsObject,
-            });
-        }
-
-        // Successes and failures
+        const employeesArray = company?.employees;
         return res.status(201).json({
-            message:
-                'Successfully fetch some of employee infos from the company, but some failed as well',
-            userJSONsObject,
-            errorEmployeeIds,
+            message: 'Successfully fetch all of employee infos from the company',
+            employeesArray,
         });
     } catch (error: unknown) {
         next(error);
@@ -605,34 +557,15 @@ const promoteEmployee: RequestHandler = async (
     res: Response,
     next: NextFunction,
 ): Promise<Response | void> => {
-    const { role } = res.locals as { role: string };
-    const { userId } = req.params;
-
-    if (role !== 'super_admin') {
-        throw new Errors.ValidationError(
-            'Invalid Authorization,require super admin',
-            'Super_admin',
-        );
-    }
+    const targetUser = res.locals.targetUser as IUser;
 
     try {
-        const targetUser: IUser | null = await User.findById(userId).exec();
-
-        if (!targetUser) {
-            throw new Errors.DatabaseError('Target user not found', 'Target user');
-        }
-
-        const targetUserRole = targetUser.role;
-
-        if (!targetUserRole || targetUserRole !== 'employee') {
-            throw new Errors.BusinessLogicError('Target user is not employee', 'Target user');
-        }
-        targetUser.role = 'admin';
+        targetUser.role = Role.Admin;
         const updatedUser: IUser = await targetUser.save();
         const userJson: IUser = updatedUser.toJSON();
         const updatedRole = updatedUser.role;
         return res.status(201).json({
-            message: 'Successfully promote employee to admin',
+            message: `Successfully promote ${Role.Employee} to ${Role.Admin}`,
             userJson,
             updatedRole,
         });
