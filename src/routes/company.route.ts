@@ -3,6 +3,7 @@ import companyControllers from '@controllers/company.controller';
 import routeValidators from '@middleware/routeValidators/companies';
 import userRouteMiddlewares from '@middleware/usersRoute';
 import companyRouteMiddlewares from '@middleware/companyRoute';
+import { Role } from '@interfaces/users';
 
 const router = Router();
 router.get('/', companyControllers.getAllCompanies);
@@ -13,6 +14,7 @@ router.patch('/:id', companyControllers.updateCompanyById);
 router.post(
     '/:companyId/invite-employees',
     userRouteMiddlewares.verifyHeaderToken,
+    companyRouteMiddlewares.requiredRoles([Role.SuperAdmin, Role.Admin]),
     routeValidators.emailArrayValidator,
     companyControllers.inviteEmployees,
 );
@@ -26,14 +28,16 @@ router.post(
 router.patch(
     '/:companyId/update-company-profile',
     userRouteMiddlewares.verifyHeaderToken,
+    companyRouteMiddlewares.requiredRoles([Role.SuperAdmin]),
     routeValidators.updateCompanyValidator,
     companyControllers.updateCompany,
 );
 
 router.get(
-    '/:companyId/get-all-employees',
+    '/:companyId/employees',
     userRouteMiddlewares.verifyHeaderToken,
     companyRouteMiddlewares.validateCompanyAndUser,
+    companyRouteMiddlewares.requiredRoles([Role.SuperAdmin, Role.Admin]),
     companyControllers.getEmployeesFromCompany,
 );
 
@@ -41,6 +45,7 @@ router.post(
     '/:companyId/users/:userId/promote-employee',
     userRouteMiddlewares.verifyHeaderToken,
     companyRouteMiddlewares.validateCompanyAndUser,
+    companyRouteMiddlewares.requiredRoles([Role.SuperAdmin]),
     companyControllers.promoteEmployee,
 );
 
