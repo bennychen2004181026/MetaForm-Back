@@ -136,6 +136,7 @@ const createAccount: RequestHandler = async (
         savedUser.toJSON();
 
         res.locals.user = savedUser;
+        res.locals.isAccountComplete = savedUser.isAccountComplete;
         next();
     } catch (error: unknown) {
         next(error);

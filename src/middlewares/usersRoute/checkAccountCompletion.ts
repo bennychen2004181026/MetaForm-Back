@@ -42,12 +42,14 @@ const checkAccountCompletion = async (
                 updatedUser,
                 company: companyExists,
                 token,
+                isAccountComplete: true,
             });
         }
 
         // Scenario 2: User who has already label account completed without the company attached
         if (user.isAccountComplete && !user.company) {
             await User.updateOne({ _id: user._id }, { isAccountComplete: false });
+            res.locals.isAccountComplete = false;
             return next();
         }
 
@@ -76,11 +78,13 @@ const checkAccountCompletion = async (
                 updatedUser,
                 company: companyExists,
                 token,
+                isAccountComplete: true,
             });
         }
 
         // Scenario 4: Newly created user
         if (!user.isAccountComplete) {
+            res.locals.isAccountComplete = false;
             return next();
         }
 

@@ -556,8 +556,7 @@ const getEmployeesFromCompany: RequestHandler = async (
 
         const employeesArray = company?.employees;
         return res.status(201).json({
-            message:
-                'Successfully fetch some of employee infos from the company, but some failed as well',
+            message: 'Successfully fetch all of employee infos from the company',
             employeesArray,
         });
     } catch (error: unknown) {
