@@ -6,7 +6,6 @@ import Company from '@models/company.model';
 import User from '@models/user.model';
 import { ICompany } from '@interfaces/company';
 import { IUser, Role } from '@interfaces/users';
-
 import Errors from '@errors/ClassError';
 import { sendEmail, emailTemplates } from '@utils/emailService';
 import { validateToken } from '@utils/jwt';
@@ -558,26 +557,15 @@ const promoteEmployee: RequestHandler = async (
     res: Response,
     next: NextFunction,
 ): Promise<Response | void> => {
-    const { userId } = req.params;
+    const targetUser = res.locals.targetUser as IUser;
 
     try {
-        const targetUser: IUser | null = await User.findById(userId).exec();
-
-        if (!targetUser) {
-            throw new Errors.DatabaseError('Target user not found', 'Target user');
-        }
-
-        const targetUserRole = targetUser.role;
-
-        if (!targetUserRole || targetUserRole !== Role.Employee) {
-            throw new Errors.BusinessLogicError('Target user is not employee', 'Target user');
-        }
         targetUser.role = Role.Admin;
         const updatedUser: IUser = await targetUser.save();
         const userJson: IUser = updatedUser.toJSON();
         const updatedRole = updatedUser.role;
         return res.status(201).json({
-            message: 'Successfully promote employee to admin',
+            message: `Successfully promote ${Role.Employee} to ${Role.Admin}`,
             userJson,
             updatedRole,
         });
@@ -591,29 +579,15 @@ const demoteAdmin: RequestHandler = async (
     res: Response,
     next: NextFunction,
 ): Promise<Response | void> => {
-    const { userId } = req.params;
+    const targetUser = res.locals.targetUser as IUser;
 
     try {
-        const targetUser: IUser | null = await User.findById(userId).exec();
-
-        if (!targetUser) {
-            throw new Errors.DatabaseError('Target user not found', 'Target user');
-        }
-
-        const targetUserRole = targetUser.role;
-
-        if (!targetUserRole || targetUserRole !== Role.Employee) {
-            throw new Errors.BusinessLogicError(
-                `Target user is not ${Role.Employee}`,
-                'Target user',
-            );
-        }
-        targetUser.role = Role.Admin;
+        targetUser.role = Role.Employee;
         const updatedUser: IUser = await targetUser.save();
         const userJson: IUser = updatedUser.toJSON();
         const updatedRole = updatedUser.role;
         return res.status(201).json({
-            message: `Successfully promote ${Role.Employee} to ${Role.Admin}`,
+            message: `Successfully promote ${Role.Admin} to ${Role.Employee}`,
             userJson,
             updatedRole,
         });
@@ -659,7 +633,7 @@ const deactivateUser: RequestHandler = async (req, res, next) => {
         const updatedUser = await targetUser.save();
         const userJson: IUser = updatedUser.toJSON();
         res.status(200).json({
-            message: `Successfully deactivated ${targetUser.role}`,
+            message: `Successfully deactivated user: ${targetUser.email}`,
             userJson,
         });
     } catch (error) {
