@@ -1,7 +1,7 @@
 import passport from 'passport';
 import passportGoogle, { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import User from '@models/user.model';
-import { IUser, PassportUser } from '@interfaces/users';
+import { IUser, PassportUser, Role } from '@interfaces/users';
 
 const clientID = process.env.GOOGLE_CLIENT_ID || '';
 const clientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
@@ -44,9 +44,9 @@ passport.use(
                             username: 'GoogleUser',
                             firstName: profile.name?.givenName,
                             lastName: profile.name?.familyName,
-                            role: 'super_admin',
+                            role: Role.SuperAdmin,
                             isAccountComplete: false,
-                            isActive: false,
+                            isActive: true,
                             googleRefreshToken: refreshToken,
                         });
                         await user.save();

@@ -9,7 +9,7 @@ import { getSignedUrl as getCloudFrontSignedUrl } from '@aws-sdk/cloudfront-sign
 import Errors from '@errors/ClassError';
 import User from '@models/user.model';
 import Company from '@models/company.model';
-import { IUser } from '@interfaces/users';
+import { IUser, Role } from '@interfaces/users';
 import { ICompany } from '@interfaces/company';
 import { generateTokenHelper } from '@utils/jwt';
 import s3Client from '@utils/s3Client';
@@ -125,9 +125,9 @@ const createAccount: RequestHandler = async (
             lastName,
             email,
             password,
-            role: 'super_admin',
+            role: Role.SuperAdmin,
             isAccountComplete: false,
-            isActive: false,
+            isActive: true,
         };
 
         const newUser: IUser = new User(partialProperties);
