@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import passport from 'passport';
 import routeValidators from '@middleware/routeValidators/users';
 import userRouteMiddlewares from '@middleware/usersRoute';
+
 import userControllers from '@controllers/user.controller';
 import middlewares from '@middleware/index';
 import { IUser } from '@interfaces/users';
@@ -18,6 +19,7 @@ userRouter.post(
 
 userRouter.get(
     '/verification/:token',
+    middlewares.alreadyLogin,
     userRouteMiddlewares.verifyToken,
     userControllers.prepareAccountCreation,
 );

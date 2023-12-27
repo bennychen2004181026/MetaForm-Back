@@ -6,14 +6,15 @@ const completeAccountValidator = [
     body('companyName').trim().isString().notEmpty().withMessage('Company name is required'),
 
     body('abn')
+        .trim()
         .notEmpty()
         .withMessage('ABN is required')
         .isLength({ min: 11, max: 11 })
         .withMessage('ABN should be exactly 11 digits'),
 
-    body('logo').optional().isString(),
+    body('logo').trim().optional().isString(),
 
-    body('industry').isString().notEmpty().withMessage('Industry is required'),
+    body('industry').trim().isString().notEmpty().withMessage('Industry is required'),
 
     (req: Request, res: Response, next: NextFunction): void => {
         const errors = validationResult(req);

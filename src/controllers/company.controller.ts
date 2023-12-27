@@ -368,21 +368,36 @@ const inviteEmployees: RequestHandler = async (
                 });
                 return { email, success: true };
             } catch (error) {
-                return { email, success: false, error };
+                return { email, success: false, error: `Failed tp send to ${email}` };
             }
         });
 
         const results = await Promise.all(emailSendingPromises);
 
         const failedEmails = results.filter(result => !result.success);
-        if (failedEmails.length > 0) {
+        const successEmails = results.filter(result => result.success);
+        const failedEmailsMessage = failedEmails.map(result => result.email).join(', ');
+        const failedEmailAddresses = failedEmails.map(result => result.email);
+
+        // All failures
+        if (successEmails.length === 0) {
             throw new Errors.BusinessLogicError(
-                `Failed to send verification emails to: ${failedEmails.join(', ')}`,
+                `Failed to send verification emails to: ${failedEmailsMessage}`,
             );
         }
 
+        // All success
+        if (failedEmails.length === 0) {
+            return res.status(200).json({
+                message: 'Verification emails have been sent to all employees.',
+            });
+        }
+
+        // Successes and failures
         return res.status(200).json({
-            message: 'Verification emails have been sent to all employees.',
+            message:
+                'Verification emails have been sent to some of the employees, but some failed as well.',
+            failedEmailAddresses,
         });
     } catch (error: unknown) {
         next(error);
@@ -474,6 +489,81 @@ const AddEmployeeToCompany: RequestHandler = async (
     }
 };
 
+const updateCompany: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
+    const { userId, role } = res.locals;
+    const { companyId } = req.params;
+    const updateData = req.body;
+
+    if (!userId || userId.trim().length === 0 || !role) {
+        throw new Errors.NotFoundError('UserId and role not found', 'userId and role');
+    }
+
+    if (role !== 'super_admin') {
+        throw new Errors.ValidationError('Invalid Authorization', 'Super_admin');
+    }
+
+    try {
+        const updateFields: { [key: string]: string } = {};
+        Object.keys(updateData).forEach(key => {
+            if (updateData[key]) {
+                updateFields[key] = updateData[key];
+            }
+        });
+
+        const updatedCompany: ICompany | null = await Company.findByIdAndUpdate(
+            companyId,
+            { $set: updateFields },
+            { new: true },
+        );
+
+        if (!updatedCompany) {
+            throw new Errors.DatabaseError(
+                'Error when updating company profile',
+                'updating company profile',
+            );
+        }
+
+        const companyJson = updatedCompany.toJSON();
+        return res.status(201).json({
+            message: 'Successfully update the company profile',
+            companyJson,
+        });
+    } catch (error: unknown) {
+        next(error);
+    }
+};
+
+const getEmployeesFromCompany: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
+    const { role } = res.locals as { role: string };
+    const { companyId } = req.params;
+
+    if (role !== 'super_admin' && role !== 'admin') {
+        throw new Errors.ValidationError(
+            'Invalid Authorization,require,super admin and admin',
+            'Super_admin and admin',
+        );
+    }
+    try {
+        const company = await Company.findById(companyId).populate('employees').exec();
+
+        const employeesArray = company?.employees;
+        return res.status(201).json({
+            message: 'Successfully fetch all of employee infos from the company',
+            employeesArray,
+        });
+    } catch (error: unknown) {
+        next(error);
+    }
+};
+
 /*
  * delete function is not implemented as it won't be applicable for companies
  */
@@ -485,4 +575,6 @@ export {
     updateCompanyById,
     inviteEmployees,
     AddEmployeeToCompany,
+    updateCompany,
+    getEmployeesFromCompany,
 };

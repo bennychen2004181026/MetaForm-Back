@@ -67,7 +67,9 @@ const addEmployeeValidator = [
                 .array()
                 .map(err => err.msg)
                 .join(', ');
-            return next(new Errors.ValidationError(errorMessages, 'Email Array Verification'));
+            return next(
+                new Errors.ValidationError(errorMessages, 'Add Employee Account Verification'),
+            );
         }
         next();
     },

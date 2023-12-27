@@ -1,6 +1,6 @@
-import { body, validationResult } from 'express-validator'
+import { body, validationResult } from 'express-validator';
 import { Request, Response, NextFunction } from 'express';
-import Errors from '@errors/ClassError'
+import Errors from '@errors/ClassError';
 
 const userInfosValidator = [
     body('username')
@@ -11,16 +11,9 @@ const userInfosValidator = [
         .isLength({ min: 5, max: 20 })
         .withMessage('Username must be between 5 and 20 characters long'),
 
-    body('firstName')
-        .trim()
-        .isString()
-        .notEmpty()
-        .withMessage('FirstName cannot be empty'),
+    body('firstName').trim().isString().notEmpty().withMessage('FirstName cannot be empty'),
 
-    body('lastName')
-        .optional()
-        .trim()
-        .isString(),
+    body('lastName').optional().trim().isString(),
 
     body('email')
         .trim()
@@ -53,21 +46,25 @@ const userInfosValidator = [
         .isString(),
 
     body('role')
+        .trim()
         .default('super_admin')
         .isString()
         .isIn(['super_admin', 'admin', 'employee'])
         .withMessage('Role must be one of super_admin, admin, or employee'),
 
     body('membershipType')
+        .trim()
         .default('Basic')
         .isString()
         .isIn(['Basic', 'Premium'])
         .withMessage('MembershipType must be one of Basic, Premium'),
 
     body('confirmPassword').custom((value, { req }) => {
-
         if (value !== req.body.password) {
-            throw new Errors.ValidationError('Password confirmation does not match password', 'Confirm Password');
+            throw new Errors.ValidationError(
+                'Password confirmation does not match password',
+                'Confirm Password',
+            );
         }
         return true;
     }),
@@ -76,11 +73,14 @@ const userInfosValidator = [
         const errors = validationResult(req);
 
         if (!errors.isEmpty()) {
-            const errorMessages = errors.array().map(err => err.msg).join(', ');
+            const errorMessages = errors
+                .array()
+                .map(err => err.msg)
+                .join(', ');
             throw new Errors.ValidationError(errorMessages, 'account creation inputs');
         }
         next();
-    }
-]
+    },
+];
 
-export default userInfosValidator
+export default userInfosValidator;
