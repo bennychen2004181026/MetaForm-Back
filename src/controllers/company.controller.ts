@@ -1,6 +1,14 @@
-import { Request, Response, RequestHandler } from 'express';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
+import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
+
 import Company from '@models/company.model';
+import User from '@models/user.model';
 import { ICompany } from '@interfaces/company';
+import { IUser } from '@interfaces/users';
+import Errors from '@errors/ClassError';
+import { sendEmail, emailTemplates } from '@utils/emailService';
+import { validateToken } from '@utils/jwt';
 
 /**
  * @swagger
@@ -19,7 +27,7 @@ import { ICompany } from '@interfaces/company';
  *              abn: '123456789'
  *              logo: 'http://companya.png'
  *              description: 'Company A description'
- *              industry: 
+ *              industry:
  *                - manufacturing
  *                - diary
  *              address: '100 Elizabeth Street, 2000'
@@ -36,7 +44,7 @@ import { ICompany } from '@interfaces/company';
  *              abn: '123456789'
  *              logo: 'http://companya.png'
  *              description: 'Company A description'
- *              industry: 
+ *              industry:
  *                - manufacturing
  *                - diary
  *              isActive: true
@@ -55,32 +63,30 @@ import { ICompany } from '@interfaces/company';
  *                  exmaple: 'error message'
  */
 const addCompany: RequestHandler = async (req: Request, res: Response) => {
-  try {
-    const { companyName, abn, logo, description, industry, employees, address } = req.body;
-    const companyByAbn = await Company.findOne({
-      abn,
-    });
-    if (!companyByAbn) {
-      const company: ICompany = await Company.create({
-        companyName,
-        abn,
-        logo,
-        description,
-        industry,
-        isActive: true,
-        employees,
-        address,
-      });
-      res.status(201).json(company);
-    } else {
-      res.status(400).json({ error: 'Company with this abn already exists' });
+    try {
+        const { companyName, abn, logo, description, industry, employees, address } = req.body;
+        const companyByAbn = await Company.findOne({
+            abn,
+        });
+        if (!companyByAbn) {
+            const company: ICompany = await Company.create({
+                companyName,
+                abn,
+                logo,
+                description,
+                industry,
+                isActive: true,
+                employees,
+                address,
+            });
+            res.status(201).json(company);
+        } else {
+            res.status(400).json({ error: 'Company with this abn already exists' });
+        }
+    } catch (error) {
+        res.status(400).json((error as Error).message);
     }
-  } catch (error) {
-    res.status(400).json((error as Error).message);
-  }
 };
-
-
 
 /**
  * @swagger
@@ -101,7 +107,7 @@ const addCompany: RequestHandler = async (req: Request, res: Response) => {
  *                abn: '123456789'
  *                logo: 'http://companya.png'
  *                description: 'Company A description'
- *                industry: 
+ *                industry:
  *                  - manufacturing
  *                  - diary
  *                isActive: true
@@ -112,7 +118,7 @@ const addCompany: RequestHandler = async (req: Request, res: Response) => {
  *                abn: '123456789'
  *                logo: 'http://companya.png'
  *                description: 'Company B description'
- *                industry: 
+ *                industry:
  *                  - manufacturing
  *                  - diary
  *                isActive: true
@@ -121,12 +127,12 @@ const addCompany: RequestHandler = async (req: Request, res: Response) => {
  */
 
 const getAllCompanies: RequestHandler = async (req: Request, res: Response) => {
-  try {
-    const company = await Company.find().exec();
-    return res.status(200).json(company);
-  } catch (error) {
-    return res.status(400).json((error as Error).message);
-  }
+    try {
+        const company = await Company.find().exec();
+        return res.status(200).json(company);
+    } catch (error) {
+        return res.status(400).json((error as Error).message);
+    }
 };
 
 /**
@@ -155,7 +161,7 @@ const getAllCompanies: RequestHandler = async (req: Request, res: Response) => {
  *              abn: '123456789'
  *              logo: http://companya.png'
  *              description: 'Company A description'
- *              industry: 
+ *              industry:
  *                - manufacturing
  *                - diary
  *              isActive: true
@@ -171,19 +177,18 @@ const getAllCompanies: RequestHandler = async (req: Request, res: Response) => {
  */
 
 const getCompanyById: RequestHandler = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const companyById = await Company.findById(id);
-    if (companyById) {
-      res.status(200).json({ message: companyById });
-    } else {
-      res.status(404).json({ error: `${id} not found!` });
+    try {
+        const { id } = req.params;
+        const companyById = await Company.findById(id);
+        if (companyById) {
+            res.status(200).json({ message: companyById });
+        } else {
+            res.status(404).json({ error: `${id} not found!` });
+        }
+    } catch (error) {
+        res.status(400).json((error as Error).message);
     }
-  } catch (error) {
-    res.status(400).json((error as Error).message);
-  }
 };
-
 
 /**
  * @swagger
@@ -209,7 +214,7 @@ const getCompanyById: RequestHandler = async (req: Request, res: Response) => {
  *            companyName: 'Company A Update'
  *            abn: '123456789'
  *            description: 'Company A description'
- *            industry: 
+ *            industry:
  *              - manufacturing
  *              - diary
  *            address: '100 Elizabeth Street, 2000'
@@ -225,7 +230,7 @@ const getCompanyById: RequestHandler = async (req: Request, res: Response) => {
  *            companyName: 'Company A Update'
  *            abn: '123456789'
  *            description: 'Company A description'
- *            industry: 
+ *            industry:
  *              - manufacturing
  *              - diary
  *            address: '100 Elizabeth Street, 2000'
@@ -246,24 +251,238 @@ const getCompanyById: RequestHandler = async (req: Request, res: Response) => {
  */
 
 const updateCompanyById: RequestHandler = async (req: Request, res: Response) => {
-  try {
-    const { companyName, abn, logo, description, industry, employees, address } = req.body;
-    if (!companyName && !abn && !logo && !description && !industry && !employees && !address) {
-      return res.status(400).json({ message: 'Body contains no update to the Company' })
+    try {
+        const { companyName, abn, logo, description, industry, employees, address } = req.body;
+        if (!companyName && !abn && !logo && !description && !industry && !employees && !address) {
+            return res.status(400).json({ message: 'Body contains no update to the Company' });
+        }
+        const updatedCompany = await Company.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+        }).exec();
+        if (!updatedCompany) {
+            return res.status(404).json({ message: 'Company not found' });
+        }
+        return res.status(200).json({ message: 'Company updated', updatedCompany });
+    } catch (error) {
+        return res.status(400).json({ message: 'Error updating company', error });
     }
-    const updatedCompany = await Company.findByIdAndUpdate(req.params.id, req.body, { new: true }).exec();
-    if (!updatedCompany) {
-      return res.status(404).json({ message: 'Company not found' });
+};
+
+const inviteEmployees: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
+    const { emails } = req.body as { emails: string[] };
+    const { companyId } = req.params as { companyId: string };
+    const { userId, role } = res.locals as { userId: string; role: string };
+    const {
+        NODE_ENV,
+        JWT_SECRET,
+        APP_URL_LOCAL,
+        APP_URL_TEST,
+        APP_URL_PRODUCTION,
+        EMAIL_USERNAME,
+        SENDGRID_API_KEY,
+    } = process.env;
+
+    if (role !== 'super_admin' && role !== 'admin') {
+        throw new Errors.AuthorizationError(`Invalid Authorization: ${role}`, 'Role');
     }
-    return res.status(200).json({ message: 'Company updated', updatedCompany });
-  }
-  catch (error) {
-    return res.status(400).json({ message: 'Error updating company', error });
-  }
+
+    if (
+        !NODE_ENV ||
+        !JWT_SECRET ||
+        !APP_URL_LOCAL ||
+        !APP_URL_TEST ||
+        !APP_URL_PRODUCTION ||
+        !EMAIL_USERNAME ||
+        !SENDGRID_API_KEY
+    ) {
+        return next(new Errors.EnvironmentError('Missing environment variables', 'env'));
+    }
+
+    if (!userId || !role) {
+        return next(
+            new Errors.EnvironmentError(
+                'Missing userId or role in res.locals',
+                'res.locals.userId or role',
+            ),
+        );
+    }
+
+    const appURLs: {
+        [key: string]: string | undefined;
+        development: string;
+        test: string;
+        production: string;
+    } = {
+        development: APP_URL_LOCAL,
+        test: APP_URL_TEST,
+        production: APP_URL_PRODUCTION,
+    };
+
+    try {
+        const user: IUser | null = await User.findById(userId).exec();
+
+        if (!user) {
+            throw new Errors.NotFoundError(
+                'User not found in the database',
+                'user not found in database',
+            );
+        }
+
+        const existedCompany = await Company.findById(companyId).exec();
+        if (!existedCompany) {
+            throw new Errors.NotFoundError(
+                'Company not found in the database',
+                'Company not found',
+            );
+        }
+
+        if (!user.company || user.company.toString() !== existedCompany._id.toString()) {
+            throw new Errors.ValidationError(
+                'Company of user does not match the companyId param',
+                'companyId param',
+            );
+        }
+
+        const { companyName } = existedCompany;
+
+        const emailSendingPromises = emails.map(async (email: string) => {
+            try {
+                const verificationToken = jwt.sign({ email, invitedBy: userId }, JWT_SECRET, {
+                    expiresIn: '6h',
+                });
+
+                const verificationLink = `${appURLs[NODE_ENV]}/companies/${companyId}/invite-employees/${verificationToken}`;
+                const emailContent = emailTemplates.employeeVerification(
+                    verificationLink,
+                    companyName,
+                );
+
+                await sendEmail({
+                    to: email,
+                    subject: 'Welcome! Please Verify Your Email',
+                    html: emailContent,
+                });
+                return { email, success: true };
+            } catch (error) {
+                return { email, success: false, error };
+            }
+        });
+
+        const results = await Promise.all(emailSendingPromises);
+
+        const failedEmails = results.filter(result => !result.success);
+        if (failedEmails.length > 0) {
+            throw new Errors.BusinessLogicError(
+                `Failed to send verification emails to: ${failedEmails.join(', ')}`,
+            );
+        }
+
+        return res.status(200).json({
+            message: 'Verification emails have been sent to all employees.',
+        });
+    } catch (error: unknown) {
+        next(error);
+    }
+};
+
+const AddEmployeeToCompany: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
+    const { username, firstName, lastName, password, token } = req.body;
+    const { companyId } = req.params;
+
+    const { JWT_SECRET } = process.env;
+
+    if (!JWT_SECRET) {
+        return next(new Errors.EnvironmentError('Missing environment variables', 'env'));
+    }
+
+    let session: mongoose.ClientSession | null = null;
+    try {
+        session = await mongoose.startSession();
+        session.startTransaction();
+
+        const { email, invitedBy } = validateToken(token) as { email: string; invitedBy: string };
+
+        if (!email || !invitedBy) {
+            throw new Errors.ValidationError('Missing email or invitedBy in jwt', 'jwt');
+        }
+
+        const existingUser = await User.findOne({ email }, null, { session }).exec();
+
+        if (existingUser) {
+            throw new Errors.ValidationError('Email already in use', 'Email');
+        }
+
+        const inviter = await User.findById(invitedBy, null, { session }).exec();
+
+        if (!inviter || !inviter.company) {
+            throw new Errors.ValidationError('Inviter or company does not exist', 'Super_admin');
+        }
+
+        const currentCompany = await Company.findById(companyId, null, { session }).exec();
+
+        if (!currentCompany || !currentCompany.employees) {
+            throw new Errors.ValidationError(
+                'Company is not exist or have empty employees array',
+                'company',
+            );
+        }
+
+        const partialProperties: Partial<IUser> = {
+            username,
+            firstName,
+            lastName,
+            email,
+            password,
+            role: 'employee',
+            isAccountComplete: true,
+            isActive: true,
+            company: currentCompany._id,
+            invitedBy: inviter._id,
+        };
+
+        const newUser: IUser = new User(partialProperties);
+        const savedUser: IUser = await newUser.save({ session });
+        const userJson: IUser = savedUser.toJSON();
+
+        currentCompany.employees.push(savedUser._id);
+
+        const updatedCompany: ICompany = await currentCompany.save({ session });
+        const companyJson: ICompany = updatedCompany.toJSON();
+
+        await session.commitTransaction();
+        session.endSession();
+
+        return res.status(201).json({
+            message: 'Successfully create employee account',
+            companyJson,
+            userJson,
+        });
+    } catch (error: unknown) {
+        if (session) {
+            await session.abortTransaction();
+            session.endSession();
+        }
+        next(error);
+    }
 };
 
 /*
  * delete function is not implemented as it won't be applicable for companies
  */
 
-export { addCompany, getCompanyById, getAllCompanies, updateCompanyById };
+export {
+    addCompany,
+    getCompanyById,
+    getAllCompanies,
+    updateCompanyById,
+    inviteEmployees,
+    AddEmployeeToCompany,
+};

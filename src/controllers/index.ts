@@ -3,6 +3,7 @@ import {
     getCompanyById,
     getAllCompanies,
     updateCompanyById,
+    inviteEmployees,
 } from './company.controller';
 import {
     createForm,
@@ -46,4 +47,5 @@ export default {
     deleteQuestionById,
     userController,
     authController,
+    inviteEmployees,
 };

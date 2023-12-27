@@ -31,7 +31,22 @@ const emailTemplates = {
       </a>
     </body>
     </html>
-`
+`,
+    employeeVerification: (verificationLink: string, companyName: string): string => `
+    <html>
+    <body>
+      <p>Hi Dear ${companyName}'s employees,</p>
+      <p>Welcome to our team! To get started, please verify your email address and set up your account.</p>
+      <p>Click the button below to verify your email address. This link expires in 10 minutes.</p>
+      <a href="${verificationLink}" 
+         style="background-color: blue; color: white; padding: 12px 16px; text-align: center; 
+         text-decoration: none; display: inline-block; border-radius: 8px; font-size: 16px; margin-top: 10px;">
+        Verify Email
+      </a>
+      <p>If you received this email by mistake, please ignore it.</p>
+    </body>
+    </html>
+`,
 };
 
 const sendEmail = async (options: EmailOptions): Promise<boolean> => {
@@ -50,7 +65,4 @@ const sendEmail = async (options: EmailOptions): Promise<boolean> => {
     }
 };
 
-export {
-    emailTemplates,
-    sendEmail
-};
+export { emailTemplates, sendEmail };
