@@ -46,14 +46,16 @@ router.post(
     userRouteMiddlewares.verifyHeaderToken,
     companyRouteMiddlewares.validateCompanyAndUser,
     companyRouteMiddlewares.requiredRoles([Role.SuperAdmin]),
+    companyRouteMiddlewares.requiredTargetRoles([Role.Employee]),
     companyControllers.promoteEmployee,
 );
 
 router.post(
-    '/:companyId/users/:userId/demote-employee',
+    '/:companyId/users/:userId/demote-admin',
     userRouteMiddlewares.verifyHeaderToken,
     companyRouteMiddlewares.validateCompanyAndUser,
     companyRouteMiddlewares.requiredRoles([Role.SuperAdmin]),
+    companyRouteMiddlewares.requiredTargetRoles([Role.Admin]),
     companyControllers.demoteAdmin,
 );
 
