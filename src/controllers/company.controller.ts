@@ -6,6 +6,7 @@ import Company from '@models/company.model';
 import User from '@models/user.model';
 import { ICompany } from '@interfaces/company';
 import { IUser, Role } from '@interfaces/users';
+
 import Errors from '@errors/ClassError';
 import { sendEmail, emailTemplates } from '@utils/emailService';
 import { validateToken } from '@utils/jwt';
@@ -590,15 +591,7 @@ const demoteAdmin: RequestHandler = async (
     res: Response,
     next: NextFunction,
 ): Promise<Response | void> => {
-    const { role } = res.locals as { role: string };
     const { userId } = req.params;
-
-    if (role !== 'super_admin') {
-        throw new Errors.ValidationError(
-            'Invalid Authorization,require super admin',
-            'Super_admin',
-        );
-    }
 
     try {
         const targetUser: IUser | null = await User.findById(userId).exec();
@@ -609,15 +602,18 @@ const demoteAdmin: RequestHandler = async (
 
         const targetUserRole = targetUser.role;
 
-        if (!targetUserRole || targetUserRole !== 'admin') {
-            throw new Errors.BusinessLogicError('Target user is not an admin', 'Target user');
+        if (!targetUserRole || targetUserRole !== Role.Employee) {
+            throw new Errors.BusinessLogicError(
+                `Target user is not ${Role.Employee}`,
+                'Target user',
+            );
         }
-        targetUser.role = 'employee';
+        targetUser.role = Role.Admin;
         const updatedUser: IUser = await targetUser.save();
         const userJson: IUser = updatedUser.toJSON();
         const updatedRole = updatedUser.role;
         return res.status(201).json({
-            message: 'Successfully demote admin to employee',
+            message: `Successfully promote ${Role.Employee} to ${Role.Admin}`,
             userJson,
             updatedRole,
         });
