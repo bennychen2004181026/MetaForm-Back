@@ -78,6 +78,7 @@ userRouter.get(
             const user = req.user as IUser;
             res.locals.user = user;
             res.locals.userId = user._id;
+            res.locals.isAccountComplete = user.isAccountComplete;
             next();
         } catch (error) {
             next(error);
