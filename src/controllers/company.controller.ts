@@ -5,7 +5,8 @@ import mongoose from 'mongoose';
 import Company from '@models/company.model';
 import User from '@models/user.model';
 import { ICompany } from '@interfaces/company';
-import { IUser } from '@interfaces/users';
+import { IUser, Role } from '@interfaces/users';
+
 import Errors from '@errors/ClassError';
 import { sendEmail, emailTemplates } from '@utils/emailService';
 import { validateToken } from '@utils/jwt';
@@ -286,10 +287,6 @@ const inviteEmployees: RequestHandler = async (
         SENDGRID_API_KEY,
     } = process.env;
 
-    if (role !== 'super_admin' && role !== 'admin') {
-        throw new Errors.AuthorizationError(`Invalid Authorization: ${role}`, 'Role');
-    }
-
     if (
         !NODE_ENV ||
         !JWT_SECRET ||
@@ -438,7 +435,10 @@ const AddEmployeeToCompany: RequestHandler = async (
         const inviter = await User.findById(invitedBy, null, { session }).exec();
 
         if (!inviter || !inviter.company) {
-            throw new Errors.ValidationError('Inviter or company does not exist', 'Super_admin');
+            throw new Errors.ValidationError(
+                'Inviter or company does not exist',
+                `${Role.SuperAdmin}`,
+            );
         }
 
         const currentCompany = await Company.findById(companyId, null, { session }).exec();
@@ -456,7 +456,7 @@ const AddEmployeeToCompany: RequestHandler = async (
             lastName,
             email,
             password,
-            role: 'employee',
+            role: Role.Employee,
             isAccountComplete: true,
             isActive: true,
             company: currentCompany._id,
@@ -502,10 +502,6 @@ const updateCompany: RequestHandler = async (
         throw new Errors.NotFoundError('UserId and role not found', 'userId and role');
     }
 
-    if (role !== 'super_admin') {
-        throw new Errors.ValidationError('Invalid Authorization', 'Super_admin');
-    }
-
     try {
         const updateFields: { [key: string]: string } = {};
         Object.keys(updateData).forEach(key => {
@@ -542,15 +538,8 @@ const getEmployeesFromCompany: RequestHandler = async (
     res: Response,
     next: NextFunction,
 ): Promise<Response | void> => {
-    const { role } = res.locals as { role: string };
     const { companyId } = req.params;
 
-    if (role !== 'super_admin' && role !== 'admin') {
-        throw new Errors.ValidationError(
-            'Invalid Authorization,require,super admin and admin',
-            'Super_admin and admin',
-        );
-    }
     try {
         const company = await Company.findById(companyId).populate('employees').exec();
 
@@ -569,15 +558,7 @@ const promoteEmployee: RequestHandler = async (
     res: Response,
     next: NextFunction,
 ): Promise<Response | void> => {
-    const { role } = res.locals as { role: string };
     const { userId } = req.params;
-
-    if (role !== 'super_admin') {
-        throw new Errors.ValidationError(
-            'Invalid Authorization,require super admin',
-            'Super_admin',
-        );
-    }
 
     try {
         const targetUser: IUser | null = await User.findById(userId).exec();
@@ -588,10 +569,10 @@ const promoteEmployee: RequestHandler = async (
 
         const targetUserRole = targetUser.role;
 
-        if (!targetUserRole || targetUserRole !== 'employee') {
+        if (!targetUserRole || targetUserRole !== Role.Employee) {
             throw new Errors.BusinessLogicError('Target user is not employee', 'Target user');
         }
-        targetUser.role = 'admin';
+        targetUser.role = Role.Admin;
         const updatedUser: IUser = await targetUser.save();
         const userJson: IUser = updatedUser.toJSON();
         const updatedRole = updatedUser.role;
@@ -610,15 +591,7 @@ const demoteAdmin: RequestHandler = async (
     res: Response,
     next: NextFunction,
 ): Promise<Response | void> => {
-    const { role } = res.locals as { role: string };
     const { userId } = req.params;
-
-    if (role !== 'super_admin') {
-        throw new Errors.ValidationError(
-            'Invalid Authorization,require super admin',
-            'Super_admin',
-        );
-    }
 
     try {
         const targetUser: IUser | null = await User.findById(userId).exec();
@@ -629,15 +602,18 @@ const demoteAdmin: RequestHandler = async (
 
         const targetUserRole = targetUser.role;
 
-        if (!targetUserRole || targetUserRole !== 'admin') {
-            throw new Errors.BusinessLogicError('Target user is not an admin', 'Target user');
+        if (!targetUserRole || targetUserRole !== Role.Employee) {
+            throw new Errors.BusinessLogicError(
+                `Target user is not ${Role.Employee}`,
+                'Target user',
+            );
         }
-        targetUser.role = 'employee';
+        targetUser.role = Role.Admin;
         const updatedUser: IUser = await targetUser.save();
         const userJson: IUser = updatedUser.toJSON();
         const updatedRole = updatedUser.role;
         return res.status(201).json({
-            message: 'Successfully demote admin to employee',
+            message: `Successfully promote ${Role.Employee} to ${Role.Admin}`,
             userJson,
             updatedRole,
         });
@@ -650,21 +626,17 @@ const deactivateUser: RequestHandler = async (req, res, next) => {
     const { role } = res.locals as { role: string };
     const { userId } = req.params;
 
-    if (role !== 'super_admin' && role !== 'admin') {
-        return next(new Errors.AuthorizationError('Unauthorized to perform deactivation', 'Role'));
-    }
-
     try {
         const targetUser: IUser | null = await User.findById(userId).exec();
         if (!targetUser) {
             return next(new Errors.DatabaseError('Target user not found', 'Target user'));
         }
 
-        if (role === 'super_admin') {
-            if (targetUser.role === 'super_admin') {
+        if (role === Role.SuperAdmin) {
+            if (targetUser.role === Role.SuperAdmin) {
                 return next(
                     new Errors.BusinessLogicError(
-                        'Cannot deactivate another super admin',
+                        `Cannot deactivate another ${Role.SuperAdmin}`,
                         'Target user',
                     ),
                 );
@@ -672,11 +644,11 @@ const deactivateUser: RequestHandler = async (req, res, next) => {
             targetUser.isActive = false;
         }
 
-        if (role === 'admin') {
-            if (targetUser.role !== 'employee') {
+        if (role === Role.Admin) {
+            if (targetUser.role !== Role.Employee) {
                 return next(
                     new Errors.BusinessLogicError(
-                        'Admin can only deactivate an employee',
+                        `${Role.Admin} can only deactivate an ${Role.Employee}`,
                         'Target user',
                     ),
                 );
