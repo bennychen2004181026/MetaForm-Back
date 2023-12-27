@@ -85,8 +85,7 @@ userRouter.get(
         }
     },
     userRouteMiddlewares.generateToken,
-    userRouteMiddlewares.checkAccountCompletion,
-    userRouteMiddlewares.sendTokenAndUser,
+    userRouteMiddlewares.sendOauthScript,
 );
 
 userRouter.get(
