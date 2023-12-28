@@ -1,9 +1,11 @@
-import errorHandler from '@middleware/errorHandler'
-import alreadyLogin from '@middleware/alreadyLogin'
+import errorHandler from '@middleware/errorHandler';
+import alreadyLogin from '@middleware/alreadyLogin';
+import googleOauthErrorHandler from '@middleware/googleOauthErrorHandler';
 
 const middlewares = {
     errorHandler,
-    alreadyLogin
-}
+    alreadyLogin,
+    googleOauthErrorHandler,
+};
 
-export default middlewares
+export default middlewares;

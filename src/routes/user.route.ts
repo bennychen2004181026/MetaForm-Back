@@ -86,6 +86,7 @@ userRouter.get(
     },
     userRouteMiddlewares.generateToken,
     userRouteMiddlewares.sendOauthScript,
+    middlewares.googleOauthErrorHandler,
 );
 
 userRouter.get(
