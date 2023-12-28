@@ -37,24 +37,26 @@ const sendOauthScript: RequestHandler = (
         const APP_URL_ORIGIN = `${appURLs[NODE_ENV]}`;
         if (isAccountComplete) {
             const script = `
-        window.opener.postMessage({
-            message:'Google Oauth user successfully login.',
-            token: '${token}',
-            user: ${JSON.stringify(user)},
-            isAccountComplete:${isAccountComplete}
-        }, ${APP_URL_ORIGIN});
-        window.close();
+            window.opener.postMessage({
+                source: 'GoogleOAuth',
+                message: 'Google Oauth user successfully login.',
+                token: '${token}',
+                user: ${JSON.stringify(user)},
+                isAccountComplete: ${isAccountComplete}
+            }, '${APP_URL_ORIGIN}');
+            window.close();
         `;
             return res.status(201).send(`<script>${script}</script>`);
         }
 
         const script = `
         window.opener.postMessage({
-            message:'Google Oauth user successfully created, please complete the company binding.',
+            source: 'GoogleOAuth',
+            message: 'Google Oauth user successfully created, please complete the company binding.',
             token: '${token}',
             user: ${JSON.stringify(user)},
-            isAccountComplete:${isAccountComplete}
-        }, ${APP_URL_ORIGIN});
+            isAccountComplete: ${isAccountComplete}
+        }, '${APP_URL_ORIGIN}');
         window.close();
         `;
         return res.status(201).send(`<script>${script}</script>`);

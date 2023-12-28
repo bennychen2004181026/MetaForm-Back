@@ -1,7 +1,12 @@
-import { Response, Request } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import CustomError from '@errors/ClassError/CustomError';
 
-const googleOauthErrorHandler = (err: Error, req: Request, res: Response): Response | void => {
+const googleOauthErrorHandler = (
+    err: Error,
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Response | void => {
     const { NODE_ENV, APP_URL_LOCAL, APP_URL_TEST, APP_URL_PRODUCTION } = process.env;
 
     const appURLs: {
@@ -20,7 +25,8 @@ const googleOauthErrorHandler = (err: Error, req: Request, res: Response): Respo
     if (err instanceof CustomError) {
         const script = `
         window.opener.postMessage({
-            error: ${JSON.stringify(err.serializeErrors())}
+            source: 'GoogleOAuth',
+            errors: ${JSON.stringify(err.serializeErrors())}
         }, '${APP_URL_ORIGIN}');
         window.close();
     `;
@@ -35,7 +41,8 @@ const googleOauthErrorHandler = (err: Error, req: Request, res: Response): Respo
             : fallbackStatusCode;
 
     const errorResponse = {
-        error: [
+        source: 'GoogleOAuth',
+        errors: [
             {
                 name: err.name,
                 message: err.message,
@@ -44,7 +51,7 @@ const googleOauthErrorHandler = (err: Error, req: Request, res: Response): Respo
         ],
     };
     const script = `
-    window.opener.postMessage(${errorResponse}
+    window.opener.postMessage((${JSON.stringify(errorResponse)}
     , '${APP_URL_ORIGIN}');
     window.close();
 `;
