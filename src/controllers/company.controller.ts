@@ -606,29 +606,18 @@ const deactivateUser: RequestHandler = async (req, res, next) => {
             return next(new Errors.DatabaseError('Target user not found', 'Target user'));
         }
 
-        if (role === Role.SuperAdmin) {
-            if (targetUser.role === Role.SuperAdmin) {
-                return next(
-                    new Errors.BusinessLogicError(
-                        `Cannot deactivate another ${Role.SuperAdmin}`,
-                        'Target user',
-                    ),
-                );
-            }
-            targetUser.isActive = false;
+        if (
+            (role === Role.SuperAdmin && targetUser.role === Role.SuperAdmin) ||
+            (role === Role.Admin && targetUser.role !== Role.Employee)
+        ) {
+            const message =
+                role === Role.SuperAdmin
+                    ? `Cannot deactivate another ${Role.SuperAdmin}`
+                    : `${Role.Admin} can only deactivate an ${Role.Employee}`;
+            return next(new Errors.BusinessLogicError(message, 'Target user'));
         }
 
-        if (role === Role.Admin) {
-            if (targetUser.role !== Role.Employee) {
-                return next(
-                    new Errors.BusinessLogicError(
-                        `${Role.Admin} can only deactivate an ${Role.Employee}`,
-                        'Target user',
-                    ),
-                );
-            }
-            targetUser.isActive = false;
-        }
+        targetUser.isActive = false;
 
         const updatedUser = await targetUser.save();
         const userJson: IUser = updatedUser.toJSON();
@@ -656,20 +645,19 @@ const reactivateUser: RequestHandler = async (req, res, next) => {
             );
         }
 
-        if (role === Role.SuperAdmin) {
+        if (
+            role === Role.SuperAdmin ||
+            (role === Role.Admin && targetUser.role === Role.Employee)
+        ) {
             targetUser.isActive = true;
         }
-
         if (role === Role.Admin) {
-            if (targetUser.role !== Role.Employee) {
-                return next(
-                    new Errors.BusinessLogicError(
-                        `${Role.Admin} can only reactivate an ${Role.Employee}`,
-                        'Target user',
-                    ),
-                );
-            }
-            targetUser.isActive = true;
+            return next(
+                new Errors.BusinessLogicError(
+                    `${Role.Admin} can only reactivate an ${Role.Employee}`,
+                    'Target user',
+                ),
+            );
         }
 
         const updatedUser = await targetUser.save();
