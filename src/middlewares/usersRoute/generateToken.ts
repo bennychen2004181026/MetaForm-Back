@@ -18,7 +18,7 @@ const generateToken = async (
 
     const { user } = res.locals;
 
-    if (!user || !user._id) {
+    if (!user?._id) {
         return next(new Errors.BusinessLogicError('User information not found', 'userId'));
     }
 

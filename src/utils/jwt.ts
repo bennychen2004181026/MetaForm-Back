@@ -1,10 +1,10 @@
 import jwt, { Secret } from 'jsonwebtoken';
 import Errors from '@errors/ClassError';
 
-export interface TokenPayload {
-    userId: string;
-    role: string;
-}
+export type TokenPayload =
+    | { userId: string; role: string }
+    | { email: string; username: string }
+    | { email: string; invitedBy: string };
 
 const generateTokenHelper = (userId: string, role: string): string => {
     if (!process.env.JWT_SECRET || !process.env.JWT_EXPIRES_IN) {
