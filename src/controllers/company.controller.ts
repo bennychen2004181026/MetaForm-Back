@@ -669,10 +669,6 @@ const reactivateUser: RequestHandler = async (req, res, next) => {
     }
 };
 
-/*
- * delete function is not implemented as it won't be applicable for companies
- */
-
 export default {
     addCompany,
     getCompanyById,

@@ -30,9 +30,9 @@ const createQuestion: RequestHandler = async (req: Request, res: Response) => {
         }
         const newQuestion = new Question({ text, type, options });
         await newQuestion.save();
-        return res.status(201).json({ message: 'Question created successfully' });
+        res.status(201).json({ message: 'Question created successfully' });
     } catch (error) {
-        return res.status(400).json((error as Error).message);
+        res.status(400).json((error as Error).message);
     }
 };
 

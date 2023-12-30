@@ -6,6 +6,7 @@ import {
     updateQuestionById,
     deleteQuestionById,
 } from '@controllers/question.controller';
+
 const questionRouter = Router();
 questionRouter.get('/', getAllQuestions);
 questionRouter.get('/:id', getQuestionById);

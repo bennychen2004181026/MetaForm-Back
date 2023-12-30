@@ -224,7 +224,7 @@ const login: RequestHandler = async (
 
         const user: IUser | null = await User.findOne({ email }).select('+password').exec();
 
-        if (!user || !user.password) {
+        if (!user?.password) {
             throw new Errors.NotFoundError('User not found or User does not has password', 'User');
         }
 
