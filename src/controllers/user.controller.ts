@@ -15,6 +15,7 @@ import { generateTokenHelper } from '@utils/jwt';
 import s3Client from '@utils/s3Client';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { EnvType } from '@interfaces/utils';
 
 const sendVerificationEmail: RequestHandler = async (
     req: Request,
@@ -48,18 +49,16 @@ const sendVerificationEmail: RequestHandler = async (
 
         const verificationToken = jwt.sign({ email, username }, JWT_SECRET, { expiresIn: '10m' });
 
-        const appURLs: {
-            [key: string]: string | undefined;
-            development: string;
-            test: string;
-            production: string;
-        } = {
+        const appURLs: Record<EnvType, string | undefined> = {
             development: APP_URL_LOCAL,
             test: APP_URL_TEST,
             production: APP_URL_PRODUCTION,
         };
 
-        const verificationLink = `${appURLs[NODE_ENV]}/users/verification/${verificationToken}`;
+        const env: EnvType =
+            (NODE_ENV as EnvType) in appURLs ? (NODE_ENV as EnvType) : 'development';
+
+        const verificationLink = `${appURLs[env]}/users/verification/${verificationToken}`;
 
         const emailContent = emailTemplates.verification(verificationLink);
 
@@ -291,21 +290,18 @@ const forgotPassword: RequestHandler = async (
         return next(new Errors.EnvironmentError('Missing environment variables', 'env'));
     }
 
-    const appURLs: {
-        [key: string]: string | undefined;
-        development: string;
-        test: string;
-        production: string;
-    } = {
+    const appURLs: Record<EnvType, string | undefined> = {
         development: APP_URL_LOCAL,
         test: APP_URL_TEST,
         production: APP_URL_PRODUCTION,
     };
 
+    const env: EnvType = (NODE_ENV as EnvType) in appURLs ? (NODE_ENV as EnvType) : 'development';
+
     const resetToken: string = crypto.randomBytes(32).toString('hex');
     const passwordExpires: Date = new Date(Date.now() + 600000);
 
-    const resetLink = `${appURLs[NODE_ENV]}/users/resetPassword/${resetToken}`;
+    const resetLink = `${appURLs[env]}/users/resetPassword/${resetToken}`;
     try {
         const { email } = req.body;
 
