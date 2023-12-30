@@ -50,4 +50,21 @@ router.post(
     companyControllers.promoteEmployee,
 );
 
+router.post(
+    '/:companyId/users/:userId/demote-admin',
+    userRouteMiddlewares.verifyHeaderToken,
+    companyRouteMiddlewares.validateCompanyAndUser,
+    companyRouteMiddlewares.requiredRoles([Role.SuperAdmin]),
+    companyRouteMiddlewares.requiredTargetRoles([Role.Admin]),
+    companyControllers.demoteAdmin,
+);
+
+router.post(
+    '/:companyId/users/:userId/deactivate',
+    userRouteMiddlewares.verifyHeaderToken,
+    companyRouteMiddlewares.validateCompanyAndUser,
+    companyRouteMiddlewares.requiredRoles([Role.SuperAdmin, Role.Admin]),
+    companyControllers.deactivateUser,
+);
+
 export default router;

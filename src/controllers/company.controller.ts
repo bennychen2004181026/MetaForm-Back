@@ -574,6 +574,62 @@ const promoteEmployee: RequestHandler = async (
     }
 };
 
+const demoteAdmin: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
+    const targetUser = res.locals.targetUser as IUser;
+
+    try {
+        targetUser.role = Role.Employee;
+        const updatedUser: IUser = await targetUser.save();
+        const userJson: IUser = updatedUser.toJSON();
+        const updatedRole = updatedUser.role;
+        return res.status(201).json({
+            message: `Successfully promote ${Role.Admin} to ${Role.Employee}`,
+            userJson,
+            updatedRole,
+        });
+    } catch (error: unknown) {
+        next(error);
+    }
+};
+
+const deactivateUser: RequestHandler = async (req, res, next) => {
+    const { role } = res.locals as { role: string };
+    const { userId } = req.params;
+
+    try {
+        const targetUser: IUser | null = await User.findById(userId).exec();
+        if (!targetUser) {
+            return next(new Errors.DatabaseError('Target user not found', 'Target user'));
+        }
+
+        if (
+            (role === Role.SuperAdmin && targetUser.role === Role.SuperAdmin) ||
+            (role === Role.Admin && targetUser.role !== Role.Employee)
+        ) {
+            const message =
+                role === Role.SuperAdmin
+                    ? `Cannot deactivate another ${Role.SuperAdmin}`
+                    : `${Role.Admin} can only deactivate an ${Role.Employee}`;
+            return next(new Errors.BusinessLogicError(message, 'Target user'));
+        }
+
+        targetUser.isActive = false;
+
+        const updatedUser = await targetUser.save();
+        const userJson: IUser = updatedUser.toJSON();
+        res.status(200).json({
+            message: `Successfully deactivated user: ${targetUser.email}`,
+            userJson,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 /*
  * delete function is not implemented as it won't be applicable for companies
  */
@@ -588,4 +644,6 @@ export default {
     updateCompany,
     getEmployeesFromCompany,
     promoteEmployee,
+    demoteAdmin,
+    deactivateUser,
 };
