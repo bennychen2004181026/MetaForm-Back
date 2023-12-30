@@ -4,4 +4,4 @@ interface EmailOptions {
     html: string;
 }
 
-export default EmailOptions
+export default EmailOptions;

@@ -3,7 +3,7 @@ import companyControllers from '@controllers/company.controller';
 import routeValidators from '@middleware/routeValidators/companies';
 import userRouteMiddlewares from '@middleware/usersRoute';
 import companyRouteMiddlewares from '@middleware/companyRoute';
-import { Role } from '@interfaces/users';
+import { Role } from '@interfaces/userEnum';
 
 const router = Router();
 router.get('/', companyControllers.getAllCompanies);

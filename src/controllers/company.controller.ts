@@ -5,7 +5,8 @@ import mongoose from 'mongoose';
 import Company from '@models/company.model';
 import User from '@models/user.model';
 import { ICompany } from '@interfaces/company';
-import { IUser, Role } from '@interfaces/users';
+import { IUser } from '@interfaces/users';
+import { Role } from '@interfaces/userEnum';
 import Errors from '@errors/ClassError';
 import { sendEmail, emailTemplates } from '@utils/emailService';
 import { validateToken } from '@utils/jwt';
@@ -423,7 +424,7 @@ const AddEmployeeToCompany: RequestHandler = async (
 
         const inviter = await User.findById(invitedBy, null, { session }).exec();
 
-        if (!inviter || !inviter.company) {
+        if (!inviter?.company) {
             throw new Errors.ValidationError(
                 'Inviter or company does not exist',
                 `${Role.SuperAdmin}`,
@@ -432,7 +433,7 @@ const AddEmployeeToCompany: RequestHandler = async (
 
         const currentCompany = await Company.findById(companyId, null, { session }).exec();
 
-        if (!currentCompany || !currentCompany.employees) {
+        if (!currentCompany?.employees) {
             throw new Errors.ValidationError(
                 'Company is not exist or have empty employees array',
                 'company',
@@ -660,10 +661,6 @@ const reactivateUser: RequestHandler = async (req, res, next) => {
         next(error);
     }
 };
-
-/*
- * delete function is not implemented as it won't be applicable for companies
- */
 
 export default {
     addCompany,

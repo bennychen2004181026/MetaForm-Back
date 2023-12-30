@@ -9,7 +9,8 @@ import { getSignedUrl as getCloudFrontSignedUrl } from '@aws-sdk/cloudfront-sign
 import Errors from '@errors/ClassError';
 import User from '@models/user.model';
 import Company from '@models/company.model';
-import { IUser, Role } from '@interfaces/users';
+import { IUser } from '@interfaces/users';
+import { Role } from '@interfaces/userEnum';
 import { ICompany } from '@interfaces/company';
 import { generateTokenHelper } from '@utils/jwt';
 import s3Client from '@utils/s3Client';
@@ -65,6 +66,8 @@ const sendVerificationEmail: RequestHandler = async (
 
         return res.status(200).json({
             message: `Verification email has been sent to ${email}. Please check your email.`,
+            email,
+            username,
         });
     } catch (error: unknown) {
         next(error);
@@ -89,7 +92,11 @@ const prepareAccountCreation: RequestHandler = async (
             throw new Errors.DatabaseError('Email already in use', 'Email');
         }
 
-        res.status(200).json({ email, username });
+        res.status(200).json({
+            message: `Your email is valid to register.`,
+            email,
+            username,
+        });
     } catch (error: unknown) {
         next(error);
     }
@@ -215,7 +222,7 @@ const login: RequestHandler = async (
 
         const user: IUser | null = await User.findOne({ email }).select('+password').exec();
 
-        if (!user || !user.password) {
+        if (!user?.password) {
             throw new Errors.NotFoundError('User not found or User does not has password', 'User');
         }
 
@@ -337,16 +344,12 @@ const resetPassword: RequestHandler = async (
         if (!user) {
             throw new Errors.ValidationError('Invalid or expired password reset token.', 'Token');
         }
-        await User.updateOne(
-            { _id: user._id },
-            {
-                $set: { password },
-                $unset: {
-                    passwordResetToken: '',
-                    passwordResetExpires: '',
-                },
-            },
-        );
+        // methods like updateOne will not trigger the UserSchema.pre 'save' to encrypt the password hook, so changed back to save()
+        user.password = password;
+        user.passwordResetToken = undefined;
+        user.passwordResetExpires = undefined;
+
+        await user.save();
         res.status(200).json({ message: 'Your password has been successfully reset.' });
     } catch (error) {
         next(error);

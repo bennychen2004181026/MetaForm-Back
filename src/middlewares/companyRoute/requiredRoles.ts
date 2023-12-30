@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import Errors from '@errors/ClassError';
-import { Role } from '@interfaces/users';
+import { Role } from '@interfaces/userEnum';
 
 const requiredRoles =
     (requiredRoles: Role[]): RequestHandler =>

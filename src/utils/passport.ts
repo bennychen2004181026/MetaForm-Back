@@ -1,7 +1,8 @@
 import passport from 'passport';
 import passportGoogle, { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import User from '@models/user.model';
-import { IUser, PassportUser, Role } from '@interfaces/users';
+import { IUser, PassportUser } from '@interfaces/users';
+import { Role } from '@interfaces/userEnum';
 import { currentApiUrl } from '@utils/urlsExport';
 
 const clientID = process.env.GOOGLE_CLIENT_ID || '';
@@ -19,7 +20,7 @@ passport.use(
     new GoogleStrategy(
         options,
         async (
-            accessToken: string,
+            _accessToken: string,
             refreshToken: string,
             profile: passportGoogle.Profile,
             done: (error: Error | null, user?: IUser | undefined) => void,
