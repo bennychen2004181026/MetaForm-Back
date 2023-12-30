@@ -2,11 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import Errors from '@errors/ClassError';
 import { validateToken } from '@utils/jwt';
 
-const verifyHeaderToken = async (
-    req: Request,
-    res: Response,
-    next: NextFunction,
-): Promise<Response | void> => {
+const verifyHeaderToken = (req: Request, res: Response, next: NextFunction): void => {
     const { authorization } = req.headers;
 
     if (!authorization) {

@@ -15,6 +15,7 @@ import { generateTokenHelper } from '@utils/jwt';
 import s3Client from '@utils/s3Client';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { currentAppUrl } from '@utils/urlsExport';
 
 const sendVerificationEmail: RequestHandler = async (
     req: Request,
@@ -48,18 +49,7 @@ const sendVerificationEmail: RequestHandler = async (
 
         const verificationToken = jwt.sign({ email, username }, JWT_SECRET, { expiresIn: '10m' });
 
-        const appURLs: {
-            [key: string]: string | undefined;
-            development: string;
-            test: string;
-            production: string;
-        } = {
-            development: APP_URL_LOCAL,
-            test: APP_URL_TEST,
-            production: APP_URL_PRODUCTION,
-        };
-
-        const verificationLink = `${appURLs[NODE_ENV]}/users/verification/${verificationToken}`;
+        const verificationLink = `${currentAppUrl}/users/verification/${verificationToken}`;
 
         const emailContent = emailTemplates.verification(verificationLink);
 
@@ -291,21 +281,10 @@ const forgotPassword: RequestHandler = async (
         return next(new Errors.EnvironmentError('Missing environment variables', 'env'));
     }
 
-    const appURLs: {
-        [key: string]: string | undefined;
-        development: string;
-        test: string;
-        production: string;
-    } = {
-        development: APP_URL_LOCAL,
-        test: APP_URL_TEST,
-        production: APP_URL_PRODUCTION,
-    };
-
     const resetToken: string = crypto.randomBytes(32).toString('hex');
     const passwordExpires: Date = new Date(Date.now() + 600000);
 
-    const resetLink = `${appURLs[NODE_ENV]}/users/resetPassword/${resetToken}`;
+    const resetLink = `${currentAppUrl}/users/resetPassword/${resetToken}`;
     try {
         const { email } = req.body;
 

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import CustomError from '@errors/ClassError/CustomError';
+import { currentAppUrl } from '@utils/urlsExport';
 
 const googleOauthErrorHandler = (
     err: Error,
@@ -7,20 +8,7 @@ const googleOauthErrorHandler = (
     res: Response,
     next: NextFunction,
 ): Response | void => {
-    const { NODE_ENV, APP_URL_LOCAL, APP_URL_TEST, APP_URL_PRODUCTION } = process.env;
-
-    const appURLs: {
-        [key: string]: string | undefined;
-        development: string | undefined;
-        test: string | undefined;
-        production: string | undefined;
-    } = {
-        development: APP_URL_LOCAL,
-        test: APP_URL_TEST,
-        production: APP_URL_PRODUCTION,
-    };
-
-    const APP_URL_ORIGIN = `${appURLs[NODE_ENV ?? 'development']}`;
+    const APP_URL_ORIGIN = `${currentAppUrl}`;
 
     if (err instanceof CustomError) {
         const script = `

@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { isBoolean } from 'lodash';
 import Errors from '@errors/ClassError';
+import { currentAppUrl } from '@utils/urlsExport';
 
 const sendOauthScript: RequestHandler = (
     req: Request,
@@ -23,18 +24,7 @@ const sendOauthScript: RequestHandler = (
             return next(new Errors.DatabaseError('User information not found', 'User'));
         }
 
-        const appURLs: {
-            [key: string]: string | undefined;
-            development: string;
-            test: string;
-            production: string;
-        } = {
-            development: APP_URL_LOCAL,
-            test: APP_URL_TEST,
-            production: APP_URL_PRODUCTION,
-        };
-
-        const APP_URL_ORIGIN = `${appURLs[NODE_ENV]}`;
+        const APP_URL_ORIGIN = `${currentAppUrl}`;
         if (isAccountComplete) {
             const script = `
             window.opener.postMessage({

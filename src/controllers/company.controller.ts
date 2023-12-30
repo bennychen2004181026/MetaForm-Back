@@ -9,6 +9,7 @@ import { IUser, Role } from '@interfaces/users';
 import Errors from '@errors/ClassError';
 import { sendEmail, emailTemplates } from '@utils/emailService';
 import { validateToken } from '@utils/jwt';
+import { currentAppUrl } from '@utils/urlsExport';
 
 /**
  * @swagger
@@ -307,17 +308,6 @@ const inviteEmployees: RequestHandler = async (
         );
     }
 
-    const appURLs: {
-        [key: string]: string | undefined;
-        development: string;
-        test: string;
-        production: string;
-    } = {
-        development: APP_URL_LOCAL,
-        test: APP_URL_TEST,
-        production: APP_URL_PRODUCTION,
-    };
-
     try {
         const user: IUser | null = await User.findById(userId).exec();
 
@@ -351,7 +341,7 @@ const inviteEmployees: RequestHandler = async (
                     expiresIn: '6h',
                 });
 
-                const verificationLink = `${appURLs[NODE_ENV]}/companies/${companyId}/invite-employees/${verificationToken}`;
+                const verificationLink = `${currentAppUrl}/companies/${companyId}/invite-employees/${verificationToken}`;
                 const emailContent = emailTemplates.employeeVerification(
                     verificationLink,
                     companyName,
@@ -636,7 +626,7 @@ const reactivateUser: RequestHandler = async (req, res, next) => {
 
     try {
         const targetUser: IUser | null = await User.findById(userId).exec();
-        if (!targetUser || targetUser.isActive === true) {
+        if (!targetUser || targetUser.isActive) {
             return next(
                 new Errors.DatabaseError(
                     'Target user not found or already activated',

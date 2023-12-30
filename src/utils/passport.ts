@@ -2,24 +2,12 @@ import passport from 'passport';
 import passportGoogle, { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import User from '@models/user.model';
 import { IUser, PassportUser, Role } from '@interfaces/users';
+import { currentApiUrl } from '@utils/urlsExport';
 
 const clientID = process.env.GOOGLE_CLIENT_ID || '';
 const clientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
-const { NODE_ENV, API_URL_LOCAL, API_URL_TEST, API_URL_PRODUCTION } = process.env;
 
-const currentEnv = NODE_ENV || 'development';
-const appURLs: {
-    [key: string]: string | undefined;
-    development: string | undefined;
-    test: string | undefined;
-    production: string | undefined;
-} = {
-    development: API_URL_LOCAL,
-    test: API_URL_TEST,
-    production: API_URL_PRODUCTION,
-};
-
-const callbackURL = `${appURLs[currentEnv]}/users/auth/google/callback`;
+const callbackURL = `${currentApiUrl}/users/auth/google/callback`;
 
 const options = {
     clientID,
