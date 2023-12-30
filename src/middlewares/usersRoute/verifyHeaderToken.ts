@@ -43,7 +43,12 @@ const verifyHeaderToken = (req: Request, res: Response, next: NextFunction): voi
             throw decoded;
         }
 
-        if (typeof decoded === 'object' && decoded !== null) {
+        if (
+            typeof decoded === 'object' &&
+            decoded !== null &&
+            'userId' in decoded &&
+            'role' in decoded
+        ) {
             const { userId, role } = decoded;
             res.locals.userId = userId;
             res.locals.role = role;

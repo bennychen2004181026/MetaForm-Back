@@ -11,8 +11,6 @@ import { sendEmail, emailTemplates } from '@utils/emailService';
 import { validateToken } from '@utils/jwt';
 import { EnvType } from '@interfaces/utils';
 
-type EnvType = 'development' | 'test' | 'production';
-
 /**
  * @swagger
  * /companies:
