@@ -38,9 +38,17 @@ const verifyHeaderToken = (req: Request, res: Response, next: NextFunction): voi
     }
 
     try {
-        const decoded = validateToken(authToken) as { userId: string; role: string };
-        res.locals.userId = decoded.userId;
-        res.locals.role = decoded.role;
+        const decoded = validateToken(authToken);
+        if (decoded instanceof Error) {
+            throw decoded;
+        }
+
+        if (typeof decoded === 'object' && decoded !== null) {
+            const { userId, role } = decoded;
+            res.locals.userId = userId;
+            res.locals.role = role;
+        }
+
         next();
     } catch (error) {
         next(error);
