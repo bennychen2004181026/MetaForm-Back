@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
 import Company from '@models/company.model';
 import User from '@models/user.model';
 import { ICompany } from '@interfaces/company';
-import { IUser } from '@interfaces/users';
+import { IUser, Role } from '@interfaces/users';
 import Errors from '@errors/ClassError';
 import { sendEmail, emailTemplates } from '@utils/emailService';
 import { validateToken } from '@utils/jwt';
@@ -286,10 +286,6 @@ const inviteEmployees: RequestHandler = async (
         SENDGRID_API_KEY,
     } = process.env;
 
-    if (role !== 'super_admin' && role !== 'admin') {
-        throw new Errors.AuthorizationError(`Invalid Authorization: ${role}`, 'Role');
-    }
-
     if (
         !NODE_ENV ||
         !JWT_SECRET ||
@@ -438,7 +434,10 @@ const AddEmployeeToCompany: RequestHandler = async (
         const inviter = await User.findById(invitedBy, null, { session }).exec();
 
         if (!inviter || !inviter.company) {
-            throw new Errors.ValidationError('Inviter or company does not exist', 'Super_admin');
+            throw new Errors.ValidationError(
+                'Inviter or company does not exist',
+                `${Role.SuperAdmin}`,
+            );
         }
 
         const currentCompany = await Company.findById(companyId, null, { session }).exec();
@@ -456,7 +455,7 @@ const AddEmployeeToCompany: RequestHandler = async (
             lastName,
             email,
             password,
-            role: 'employee',
+            role: Role.Employee,
             isAccountComplete: true,
             isActive: true,
             company: currentCompany._id,
@@ -502,10 +501,6 @@ const updateCompany: RequestHandler = async (
         throw new Errors.NotFoundError('UserId and role not found', 'userId and role');
     }
 
-    if (role !== 'super_admin') {
-        throw new Errors.ValidationError('Invalid Authorization', 'Super_admin');
-    }
-
     try {
         const updateFields: { [key: string]: string } = {};
         Object.keys(updateData).forEach(key => {
@@ -542,15 +537,8 @@ const getEmployeesFromCompany: RequestHandler = async (
     res: Response,
     next: NextFunction,
 ): Promise<Response | void> => {
-    const { role } = res.locals as { role: string };
     const { companyId } = req.params;
 
-    if (role !== 'super_admin' && role !== 'admin') {
-        throw new Errors.ValidationError(
-            'Invalid Authorization,require,super admin and admin',
-            'Super_admin and admin',
-        );
-    }
     try {
         const company = await Company.findById(companyId).populate('employees').exec();
 
@@ -564,11 +552,33 @@ const getEmployeesFromCompany: RequestHandler = async (
     }
 };
 
+const promoteEmployee: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
+    const targetUser = res.locals.targetUser as IUser;
+
+    try {
+        targetUser.role = Role.Admin;
+        const updatedUser: IUser = await targetUser.save();
+        const userJson: IUser = updatedUser.toJSON();
+        const updatedRole = updatedUser.role;
+        return res.status(201).json({
+            message: `Successfully promote ${Role.Employee} to ${Role.Admin}`,
+            userJson,
+            updatedRole,
+        });
+    } catch (error: unknown) {
+        next(error);
+    }
+};
+
 /*
  * delete function is not implemented as it won't be applicable for companies
  */
 
-export {
+export default {
     addCompany,
     getCompanyById,
     getAllCompanies,
@@ -577,4 +587,5 @@ export {
     AddEmployeeToCompany,
     updateCompany,
     getEmployeesFromCompany,
+    promoteEmployee,
 };
