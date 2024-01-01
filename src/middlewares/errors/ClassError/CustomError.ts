@@ -1,14 +1,18 @@
-import ErrorSerialized from '@interfaces/ErrorSerialized'
+import ErrorSerialized from '@interfaces/ErrorSerialized';
 
 export default abstract class CustomError extends Error {
-    abstract statusCode: number
+    abstract statusCode: number;
 
     private originalErrorMessage?: string;
 
-    constructor(message: string, public field?: string, error?: Error) {
-        super(message)
+    constructor(
+        message: string,
+        public field?: string,
+        error?: Error,
+    ) {
+        super(message);
         if (field) {
-            this.field = field
+            this.field = field;
         }
         this.originalErrorMessage = error?.message;
         Object.setPrototypeOf(this, CustomError.prototype);
@@ -17,7 +21,7 @@ export default abstract class CustomError extends Error {
     serializeErrors(): ErrorSerialized[] {
         const serialized: ErrorSerialized = {
             message: this.message,
-            statusCode: this.statusCode
+            statusCode: this.statusCode,
         };
 
         if (this.field) {
