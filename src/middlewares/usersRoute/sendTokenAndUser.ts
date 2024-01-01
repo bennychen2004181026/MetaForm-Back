@@ -1,13 +1,17 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import Errors from '@errors/ClassError';
 
-const sendTokenAndUser: RequestHandler = (
+const sendTokenAndUser:  RequestHandler = (
+    
     req: Request,
+   
     res: Response,
+   
     next: NextFunction,
+,
 ): void | Response => {
-    try {
-        const { token, user } = res.locals;
+      try {
+            const { token, user, isAccountComplete } = res.locals;
 
         if (!token) {
             return next(new Errors.AuthorizationError('Token not found'));
@@ -21,6 +25,7 @@ const sendTokenAndUser: RequestHandler = (
             message: 'User created, please complete your account setup',
             token,
             user,
+            isAccountComplete,
         });
     } catch (error) {
         next(error);

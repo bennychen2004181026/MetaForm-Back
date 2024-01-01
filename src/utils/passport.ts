@@ -2,20 +2,22 @@ import passport from 'passport';
 import passportGoogle, { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import User from '@models/user.model';
 import { IUser, PassportUser, Role } from '@interfaces/users';
+import { EnvType } from '@interfaces/utils';
 
-const clientID = process.env.GOOGLE_CLIENT_ID || '';
-const clientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
-const PORT = process.env.PORT || '3001';
-const { NODE_ENV } = process.env;
+const clientID = process.env.GOOGLE_CLIENT_ID ?? '';
+const clientSecret = process.env.GOOGLE_CLIENT_SECRET ?? '';
 
-let callbackURL: string;
-if (NODE_ENV === 'production') {
-    callbackURL = `http://localhost:${PORT}/users/auth/google/callback`;
-} else if (NODE_ENV === 'test') {
-    callbackURL = `http://localhost:${PORT}/users/auth/google/callback`;
-} else {
-    callbackURL = `http://localhost:${PORT}/users/auth/google/callback`;
-}
+const { NODE_ENV, API_URL_LOCAL, API_URL_TEST, API_URL_PRODUCTION } = process.env;
+
+const apiURLs: Record<EnvType, string | undefined> = {
+    development: API_URL_LOCAL,
+    test: API_URL_TEST,
+    production: API_URL_PRODUCTION,
+};
+
+const env: EnvType = (NODE_ENV as EnvType) in apiURLs ? (NODE_ENV as EnvType) : 'development';
+
+const callbackURL = `${apiURLs[env]}/users/auth/google/callback`;
 
 const options = {
     clientID,
@@ -27,7 +29,7 @@ passport.use(
     new GoogleStrategy(
         options,
         async (
-            accessToken: string,
+            _accessToken: string,
             refreshToken: string,
             profile: passportGoogle.Profile,
             done: (error: Error | null, user?: IUser | undefined) => void,
@@ -46,7 +48,7 @@ passport.use(
                             lastName: profile.name?.familyName,
                             role: Role.SuperAdmin,
                             isAccountComplete: false,
-                            isActive: false,
+                            isActive: true,
                             googleRefreshToken: refreshToken,
                         });
                         await user.save();

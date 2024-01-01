@@ -2,11 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import Errors from '@errors/ClassError';
 import { validateToken } from '@utils/jwt';
 
-const verifyHeaderToken = async (
-    req: Request,
-    res: Response,
-    next: NextFunction,
-): Promise<Response | void> => {
+const verifyHeaderToken = (req: Request, res: Response, next: NextFunction): void => {
     const { authorization } = req.headers;
 
     if (!authorization) {
@@ -42,9 +38,22 @@ const verifyHeaderToken = async (
     }
 
     try {
-        const decoded = validateToken(authToken) as { userId: string; role: string };
-        res.locals.userId = decoded.userId;
-        res.locals.role = decoded.role;
+        const decoded = validateToken(authToken);
+        if (decoded instanceof Error) {
+            throw decoded;
+        }
+
+        if (
+            typeof decoded === 'object' &&
+            decoded !== null &&
+            'userId' in decoded &&
+            'role' in decoded
+        ) {
+            const { userId, role } = decoded;
+            res.locals.userId = userId;
+            res.locals.role = role;
+        }
+
         next();
     } catch (error) {
         next(error);

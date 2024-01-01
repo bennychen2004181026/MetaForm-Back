@@ -1,4 +1,5 @@
 import { Schema, model } from 'mongoose';
+
 const questionSchema = new Schema({
     text: {
         type: String,

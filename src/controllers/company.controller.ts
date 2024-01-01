@@ -9,6 +9,7 @@ import { IUser, Role } from '@interfaces/users';
 import Errors from '@errors/ClassError';
 import { sendEmail, emailTemplates } from '@utils/emailService';
 import { validateToken } from '@utils/jwt';
+import { EnvType } from '@interfaces/utils';
 
 /**
  * @swagger
@@ -307,16 +308,13 @@ const inviteEmployees: RequestHandler = async (
         );
     }
 
-    const appURLs: {
-        [key: string]: string | undefined;
-        development: string;
-        test: string;
-        production: string;
-    } = {
+    const appURLs: Record<EnvType, string | undefined> = {
         development: APP_URL_LOCAL,
         test: APP_URL_TEST,
         production: APP_URL_PRODUCTION,
     };
+
+    const env: EnvType = (NODE_ENV as EnvType) in appURLs ? (NODE_ENV as EnvType) : 'development';
 
     try {
         const user: IUser | null = await User.findById(userId).exec();
@@ -351,7 +349,7 @@ const inviteEmployees: RequestHandler = async (
                     expiresIn: '6h',
                 });
 
-                const verificationLink = `${appURLs[NODE_ENV]}/companies/${companyId}/invite-employees/${verificationToken}`;
+                const verificationLink = `${appURLs[env]}/companies/${companyId}/invite-employees/${verificationToken}`;
                 const emailContent = emailTemplates.employeeVerification(
                     verificationLink,
                     companyName,
@@ -433,7 +431,7 @@ const AddEmployeeToCompany: RequestHandler = async (
 
         const inviter = await User.findById(invitedBy, null, { session }).exec();
 
-        if (!inviter || !inviter.company) {
+        if (!inviter?.company) {
             throw new Errors.ValidationError(
                 'Inviter or company does not exist',
                 `${Role.SuperAdmin}`,
@@ -442,7 +440,7 @@ const AddEmployeeToCompany: RequestHandler = async (
 
         const currentCompany = await Company.findById(companyId, null, { session }).exec();
 
-        if (!currentCompany || !currentCompany.employees) {
+        if (!currentCompany?.employees) {
             throw new Errors.ValidationError(
                 'Company is not exist or have empty employees array',
                 'company',
@@ -630,9 +628,46 @@ const deactivateUser: RequestHandler = async (req, res, next) => {
     }
 };
 
-/*
- * delete function is not implemented as it won't be applicable for companies
- */
+const reactivateUser: RequestHandler = async (req, res, next) => {
+    const { role } = res.locals as { role: string };
+    const { userId } = req.params;
+
+    try {
+        const targetUser: IUser | null = await User.findById(userId).exec();
+        if (!targetUser || targetUser.isActive) {
+            return next(
+                new Errors.DatabaseError(
+                    'Target user not found or already activated',
+                    'Target user',
+                ),
+            );
+        }
+
+        if (
+            role === Role.SuperAdmin ||
+            (role === Role.Admin && targetUser.role === Role.Employee)
+        ) {
+            targetUser.isActive = true;
+        }
+        if (role === Role.Admin) {
+            return next(
+                new Errors.BusinessLogicError(
+                    `${Role.Admin} can only reactivate an ${Role.Employee}`,
+                    'Target user',
+                ),
+            );
+        }
+
+        const updatedUser = await targetUser.save();
+        const userJson: IUser = updatedUser.toJSON();
+        res.status(200).json({
+            message: `Successfully deactivated user: ${targetUser.email}`,
+            userJson,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
 
 export default {
     addCompany,
@@ -646,4 +681,5 @@ export default {
     promoteEmployee,
     demoteAdmin,
     deactivateUser,
+    reactivateUser,
 };

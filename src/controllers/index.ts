@@ -1,10 +1,4 @@
-import {
-    addCompany,
-    getCompanyById,
-    getAllCompanies,
-    updateCompanyById,
-    inviteEmployees,
-} from './company.controller';
+import companyControllers from './company.controller';
 import {
     createForm,
     getFormById,
@@ -27,10 +21,7 @@ import {
 } from './question.controller';
 
 export default {
-    addCompany,
-    getCompanyById,
-    getAllCompanies,
-    updateCompanyById,
+    companyControllers,
     createForm,
     getFormById,
     updateFormById,
@@ -47,5 +38,4 @@ export default {
     deleteQuestionById,
     userController,
     authController,
-    inviteEmployees,
 };
