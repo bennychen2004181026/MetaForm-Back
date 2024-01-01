@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import mongoose, { CallbackWithoutResultAndOptionalError, Schema } from 'mongoose';
-import { MembershipType, Role, IUser } from '@interfaces/users';
+import { IUser } from '@interfaces/users';
+import { MembershipType, Role } from '@interfaces/userEnum';
 import Errors from '@errors/ClassError';
 
 const UserSchema: Schema = new Schema(

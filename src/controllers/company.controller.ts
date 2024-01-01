@@ -5,11 +5,12 @@ import mongoose from 'mongoose';
 import Company from '@models/company.model';
 import User from '@models/user.model';
 import { ICompany } from '@interfaces/company';
-import { IUser, Role } from '@interfaces/users';
+import { IUser } from '@interfaces/users';
+import { Role } from '@interfaces/userEnum';
 import Errors from '@errors/ClassError';
 import { sendEmail, emailTemplates } from '@utils/emailService';
 import { validateToken } from '@utils/jwt';
-import { EnvType } from '@interfaces/utils';
+import { currentAppUrl } from '@utils/urlsExport';
 
 /**
  * @swagger
@@ -308,14 +309,6 @@ const inviteEmployees: RequestHandler = async (
         );
     }
 
-    const appURLs: Record<EnvType, string | undefined> = {
-        development: APP_URL_LOCAL,
-        test: APP_URL_TEST,
-        production: APP_URL_PRODUCTION,
-    };
-
-    const env: EnvType = (NODE_ENV as EnvType) in appURLs ? (NODE_ENV as EnvType) : 'development';
-
     try {
         const user: IUser | null = await User.findById(userId).exec();
 
@@ -343,13 +336,26 @@ const inviteEmployees: RequestHandler = async (
 
         const { companyName } = existedCompany;
 
-        const emailSendingPromises = emails.map(async (email: string) => {
+        const existingUsers = await User.find({ email: { $in: emails } })
+            .select('email')
+            .exec();
+        const existingEmails = existingUsers.map(user => user.email);
+        const newEmails = emails.filter(email => !existingEmails.includes(email));
+
+        if (newEmails.length === 0) {
+            throw new Errors.ValidationError(
+                'All provided emails are already registered in the database.',
+                'emails',
+            );
+        }
+
+        const emailSendingPromises = newEmails.map(async (email: string) => {
             try {
                 const verificationToken = jwt.sign({ email, invitedBy: userId }, JWT_SECRET, {
                     expiresIn: '6h',
                 });
 
-                const verificationLink = `${appURLs[env]}/companies/${companyId}/invite-employees/${verificationToken}`;
+                const verificationLink = `${currentAppUrl}/companies/${companyId}/invite-employees/${verificationToken}`;
                 const emailContent = emailTemplates.employeeVerification(
                     verificationLink,
                     companyName,
@@ -370,28 +376,20 @@ const inviteEmployees: RequestHandler = async (
 
         const failedEmails = results.filter(result => !result.success);
         const successEmails = results.filter(result => result.success);
-        const failedEmailsMessage = failedEmails.map(result => result.email).join(', ');
-        const failedEmailAddresses = failedEmails.map(result => result.email);
 
-        // All failures
-        if (successEmails.length === 0) {
-            throw new Errors.BusinessLogicError(
-                `Failed to send verification emails to: ${failedEmailsMessage}`,
-            );
+        const successEmailsCount = successEmails.length;
+        let message =
+            successEmailsCount === newEmails.length
+                ? `Verification emails have been sent to all new, unregistered email addresses.`
+                : `Verification emails have been sent to some of the new, unregistered email addresses, but failed for others.`;
+
+        if (existingEmails.length > 0) {
+            const skippedEmails = existingEmails.join(', ');
+            message += `\nNote: The following emails were skipped as they are already registered: ${skippedEmails}.`;
         }
-
-        // All success
-        if (failedEmails.length === 0) {
-            return res.status(200).json({
-                message: 'Verification emails have been sent to all employees.',
-            });
-        }
-
-        // Successes and failures
         return res.status(200).json({
-            message:
-                'Verification emails have been sent to some of the employees, but some failed as well.',
-            failedEmailAddresses,
+            message,
+            failedEmailAddresses: failedEmails.map(result => result.email),
         });
     } catch (error: unknown) {
         next(error);
