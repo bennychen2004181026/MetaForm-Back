@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import User from '@models/user.model';
 import Errors from '@errors/ClassError';
-import { IUser, Role } from '@interfaces/users';
+import { IUser } from '@interfaces/users';
+import { Role } from '@interfaces/userEnum';
 
 const requiredTargetRoles =
     (requiredTargetRoles: Role[]): RequestHandler =>

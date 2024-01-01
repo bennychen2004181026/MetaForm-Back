@@ -1,15 +1,6 @@
 import type { Document, ObjectId } from 'mongoose';
-
-export enum MembershipType {
-    Basic = 'Basic',
-    Premium = 'Premium',
-}
-
-export enum Role {
-    SuperAdmin = 'super_admin',
-    Admin = 'admin',
-    Employee = 'employee',
-}
+import { Role, MembershipType } from '@interfaces/userEnum';
+import { ICompany } from '@interfaces/company';
 
 export interface IUser extends Document {
     username: string;
@@ -18,15 +9,15 @@ export interface IUser extends Document {
     email: string;
     password?: string;
     createdForms?: ObjectId[];
-    role: string;
-    company?: ObjectId;
+    role: Role;
+    company?: ObjectId | ICompany;
     isAccountComplete: boolean;
     invitedBy?: ObjectId;
     googleRefreshToken?: string;
     passwordResetToken?: string;
     passwordResetExpires?: Date;
     isActive: boolean;
-    membershipType: string;
+    membershipType: MembershipType;
     currentSubscription?: ObjectId;
     paymentHistory?: ObjectId[];
 }

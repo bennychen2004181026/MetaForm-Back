@@ -9,13 +9,14 @@ import { getSignedUrl as getCloudFrontSignedUrl } from '@aws-sdk/cloudfront-sign
 import Errors from '@errors/ClassError';
 import User from '@models/user.model';
 import Company from '@models/company.model';
-import { IUser, Role } from '@interfaces/users';
+import { IUser } from '@interfaces/users';
+import { Role } from '@interfaces/userEnum';
 import { ICompany } from '@interfaces/company';
 import { generateTokenHelper } from '@utils/jwt';
 import s3Client from '@utils/s3Client';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
-import { EnvType } from '@interfaces/utils';
+import { currentAppUrl } from '@utils/urlsExport';
 
 const sendVerificationEmail: RequestHandler = async (
     req: Request,
@@ -49,16 +50,7 @@ const sendVerificationEmail: RequestHandler = async (
 
         const verificationToken = jwt.sign({ email, username }, JWT_SECRET, { expiresIn: '10m' });
 
-        const appURLs: Record<EnvType, string | undefined> = {
-            development: APP_URL_LOCAL,
-            test: APP_URL_TEST,
-            production: APP_URL_PRODUCTION,
-        };
-
-        const env: EnvType =
-            (NODE_ENV as EnvType) in appURLs ? (NODE_ENV as EnvType) : 'development';
-
-        const verificationLink = `${appURLs[env]}/users/verification/${verificationToken}`;
+        const verificationLink = `${currentAppUrl}/users/verification/${verificationToken}`;
 
         const emailContent = emailTemplates.verification(verificationLink);
 
@@ -74,6 +66,8 @@ const sendVerificationEmail: RequestHandler = async (
 
         return res.status(200).json({
             message: `Verification email has been sent to ${email}. Please check your email.`,
+            email,
+            username,
         });
     } catch (error: unknown) {
         next(error);
@@ -98,7 +92,11 @@ const prepareAccountCreation: RequestHandler = async (
             throw new Errors.DatabaseError('Email already in use', 'Email');
         }
 
-        res.status(200).json({ email, username });
+        res.status(200).json({
+            message: `Your email is valid to register.`,
+            email,
+            username,
+        });
     } catch (error: unknown) {
         next(error);
     }
@@ -190,13 +188,16 @@ const completeAccount: RequestHandler = async (
         const updatedUser: IUser = await user.save({ session });
         const userJson: IUser = updatedUser.toJSON();
 
+        const token: string = generateTokenHelper(updatedUser._id, updatedUser.role);
         await session.commitTransaction();
         session.endSession();
 
         return res.status(201).json({
             message: 'Successfully bound the company to the user account.Complete account setting',
-            updatedCompany,
-            userJson,
+            token,
+            companyInfo: updatedCompany,
+            user: userJson,
+            isAccountComplete: true,
         });
     } catch (error: unknown) {
         if (session) {
@@ -222,7 +223,10 @@ const login: RequestHandler = async (
             );
         }
 
-        const user: IUser | null = await User.findOne({ email }).select('+password').exec();
+        const user: IUser | null = await User.findOne({ email })
+            .select('+password')
+            .populate('company')
+            .exec();
 
         if (!user?.password) {
             throw new Errors.NotFoundError('User not found or User does not has password', 'User');
@@ -243,7 +247,8 @@ const login: RequestHandler = async (
 
         const token: string = generateTokenHelper(user._id, user.role);
 
-        if (user.isAccountComplete === false || !user.company) {
+        const companyInfo = user.company as ICompany;
+        if (user.isAccountComplete === false || !companyInfo) {
             return res.status(200).json({
                 message: 'Logged in successfully, but require binding company first',
                 token,
@@ -256,6 +261,7 @@ const login: RequestHandler = async (
             message: 'Logged in successfully',
             token,
             user,
+            companyInfo,
             isAccountComplete: true,
         });
     } catch (error: unknown) {
@@ -290,18 +296,10 @@ const forgotPassword: RequestHandler = async (
         return next(new Errors.EnvironmentError('Missing environment variables', 'env'));
     }
 
-    const appURLs: Record<EnvType, string | undefined> = {
-        development: APP_URL_LOCAL,
-        test: APP_URL_TEST,
-        production: APP_URL_PRODUCTION,
-    };
-
-    const env: EnvType = (NODE_ENV as EnvType) in appURLs ? (NODE_ENV as EnvType) : 'development';
-
     const resetToken: string = crypto.randomBytes(32).toString('hex');
     const passwordExpires: Date = new Date(Date.now() + 600000);
 
-    const resetLink = `${appURLs[env]}/users/resetPassword/${resetToken}`;
+    const resetLink = `${currentAppUrl}/users/resetPassword/${resetToken}`;
     try {
         const { email } = req.body;
 
@@ -354,16 +352,12 @@ const resetPassword: RequestHandler = async (
         if (!user) {
             throw new Errors.ValidationError('Invalid or expired password reset token.', 'Token');
         }
-        await User.updateOne(
-            { _id: user._id },
-            {
-                $set: { password },
-                $unset: {
-                    passwordResetToken: '',
-                    passwordResetExpires: '',
-                },
-            },
-        );
+        // methods like updateOne will not trigger the UserSchema.pre 'save' to encrypt the password hook, so changed back to save()
+        user.password = password;
+        user.passwordResetToken = undefined;
+        user.passwordResetExpires = undefined;
+
+        await user.save();
         res.status(200).json({ message: 'Your password has been successfully reset.' });
     } catch (error) {
         next(error);

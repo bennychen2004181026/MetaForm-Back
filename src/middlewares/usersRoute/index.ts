@@ -4,6 +4,7 @@ import generateToken from './generateToken';
 import verifyUserId from './verifyUserId';
 import verifyHeaderToken from './verifyHeaderToken';
 import checkAccountCompletion from './checkAccountCompletion';
+import sendOauthScript from './sendOauthScript';
 
 export default {
     verifyToken,
@@ -12,4 +13,5 @@ export default {
     verifyUserId,
     verifyHeaderToken,
     checkAccountCompletion,
+    sendOauthScript,
 };

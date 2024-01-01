@@ -6,6 +6,7 @@ import userRouteMiddlewares from '@middleware/usersRoute';
 import userControllers from '@controllers/user.controller';
 import middlewares from '@middleware/index';
 import { IUser } from '@interfaces/users';
+import { ICompany } from '@interfaces/company';
 
 const userRouter = express.Router();
 
@@ -78,14 +79,16 @@ userRouter.get(
             const user = req.user as IUser;
             res.locals.user = user;
             res.locals.userId = user._id;
+            res.locals.isAccountComplete = user.isAccountComplete;
+            res.locals.companyInfo = user.company as ICompany;
             next();
         } catch (error) {
             next(error);
         }
     },
     userRouteMiddlewares.generateToken,
-    userRouteMiddlewares.checkAccountCompletion,
-    userRouteMiddlewares.sendTokenAndUser,
+    userRouteMiddlewares.sendOauthScript,
+    middlewares.googleOauthErrorHandler,
 );
 
 userRouter.get(

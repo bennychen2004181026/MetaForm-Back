@@ -5,11 +5,12 @@ import mongoose from 'mongoose';
 import Company from '@models/company.model';
 import User from '@models/user.model';
 import { ICompany } from '@interfaces/company';
-import { IUser, Role } from '@interfaces/users';
+import { IUser } from '@interfaces/users';
+import { Role } from '@interfaces/userEnum';
 import Errors from '@errors/ClassError';
 import { sendEmail, emailTemplates } from '@utils/emailService';
 import { validateToken } from '@utils/jwt';
-import { EnvType } from '@interfaces/utils';
+import { currentAppUrl } from '@utils/urlsExport';
 
 /**
  * @swagger
@@ -308,14 +309,6 @@ const inviteEmployees: RequestHandler = async (
         );
     }
 
-    const appURLs: Record<EnvType, string | undefined> = {
-        development: APP_URL_LOCAL,
-        test: APP_URL_TEST,
-        production: APP_URL_PRODUCTION,
-    };
-
-    const env: EnvType = (NODE_ENV as EnvType) in appURLs ? (NODE_ENV as EnvType) : 'development';
-
     try {
         const user: IUser | null = await User.findById(userId).exec();
 
@@ -349,7 +342,7 @@ const inviteEmployees: RequestHandler = async (
                     expiresIn: '6h',
                 });
 
-                const verificationLink = `${appURLs[env]}/companies/${companyId}/invite-employees/${verificationToken}`;
+                const verificationLink = `${currentAppUrl}/companies/${companyId}/invite-employees/${verificationToken}`;
                 const emailContent = emailTemplates.employeeVerification(
                     verificationLink,
                     companyName,

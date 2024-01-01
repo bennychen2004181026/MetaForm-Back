@@ -10,7 +10,6 @@ const CompanySchema: Schema = new Schema({
     abn: {
         type: String,
         required: true,
-        unique: true,
     },
 
     logo: {

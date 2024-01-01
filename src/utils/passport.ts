@@ -1,23 +1,14 @@
 import passport from 'passport';
 import passportGoogle, { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import User from '@models/user.model';
-import { IUser, PassportUser, Role } from '@interfaces/users';
-import { EnvType } from '@interfaces/utils';
+import { IUser, PassportUser } from '@interfaces/users';
+import { Role } from '@interfaces/userEnum';
+import { currentApiUrl } from '@utils/urlsExport';
 
-const clientID = process.env.GOOGLE_CLIENT_ID ?? '';
-const clientSecret = process.env.GOOGLE_CLIENT_SECRET ?? '';
+const clientID = process.env.GOOGLE_CLIENT_ID || '';
+const clientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
 
-const { NODE_ENV, API_URL_LOCAL, API_URL_TEST, API_URL_PRODUCTION } = process.env;
-
-const apiURLs: Record<EnvType, string | undefined> = {
-    development: API_URL_LOCAL,
-    test: API_URL_TEST,
-    production: API_URL_PRODUCTION,
-};
-
-const env: EnvType = (NODE_ENV as EnvType) in apiURLs ? (NODE_ENV as EnvType) : 'development';
-
-const callbackURL = `${apiURLs[env]}/users/auth/google/callback`;
+const callbackURL = `${currentApiUrl}/users/auth/google/callback`;
 
 const options = {
     clientID,
@@ -38,7 +29,9 @@ passport.use(
                 const email: string | undefined = profile.emails?.[0]?.value;
 
                 if (email) {
-                    let user: IUser | null = await User.findOne({ email });
+                    let user: IUser | null = await User.findOne({ email })
+                        .populate('company')
+                        .exec();
 
                     if (!user) {
                         user = new User({
