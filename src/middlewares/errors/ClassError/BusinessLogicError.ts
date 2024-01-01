@@ -1,4 +1,4 @@
-import CustomError from "./CustomError";
+import CustomError from './CustomError';
 
 export default class BusinessLogicError extends CustomError {
     statusCode: number = 400;

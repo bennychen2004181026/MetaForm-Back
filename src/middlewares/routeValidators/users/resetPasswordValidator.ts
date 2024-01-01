@@ -1,6 +1,6 @@
-import { body, validationResult } from 'express-validator'
+import { body, validationResult } from 'express-validator';
 import { Request, Response, NextFunction } from 'express';
-import Errors from '@errors/ClassError'
+import Errors from '@errors/ClassError';
 
 const resetPasswordValidator = [
     body('token')
@@ -34,9 +34,11 @@ const resetPasswordValidator = [
         .isString(),
 
     body('confirmPassword').custom((value, { req }) => {
-        
         if (value !== req.body.password) {
-            throw new Errors.ValidationError('Password confirmation does not match password', 'Confirm Password');
+            throw new Errors.ValidationError(
+                'Password confirmation does not match password',
+                'Confirm Password',
+            );
         }
         return true;
     }),
@@ -45,11 +47,14 @@ const resetPasswordValidator = [
         const errors = validationResult(req);
 
         if (!errors.isEmpty()) {
-            const errorMessages = errors.array().map(err => err.msg).join(', ');
+            const errorMessages = errors
+                .array()
+                .map(err => err.msg)
+                .join(', ');
             throw new Errors.ValidationError(errorMessages, 'account creation inputs');
         }
         next();
-    }
-]
+    },
+];
 
-export default resetPasswordValidator
+export default resetPasswordValidator;

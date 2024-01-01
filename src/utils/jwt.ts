@@ -1,5 +1,5 @@
 import jwt, { Secret } from 'jsonwebtoken';
-import Errors from '@errors/ClassError'
+import Errors from '@errors/ClassError';
 
 interface TokenPayload {
     userId: string;
@@ -7,7 +7,6 @@ interface TokenPayload {
 }
 
 const generateTokenHelper = (userId: string, role: string): string => {
-
     if (!process.env.JWT_SECRET || !process.env.JWT_EXPIRES_IN) {
         throw new Errors.EnvironmentError('JWT_SECRET or JWT_EXPIRES_IN are not defined.');
     }
@@ -22,7 +21,6 @@ const generateTokenHelper = (userId: string, role: string): string => {
 };
 
 const validateToken = (token: string): TokenPayload | unknown => {
-
     if (!process.env.JWT_SECRET || !process.env.JWT_EXPIRES_IN) {
         throw new Errors.EnvironmentError('JWT_SECRET or JWT_EXPIRES_IN are not defined.');
     }
@@ -31,9 +29,9 @@ const validateToken = (token: string): TokenPayload | unknown => {
 
     try {
         const decoded: TokenPayload = jwt.verify(token, secret) as TokenPayload;
-        return decoded
+        return decoded;
     } catch (error) {
-        return error
+        return error;
     }
 };
 export { generateTokenHelper, validateToken };

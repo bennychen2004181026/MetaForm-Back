@@ -1,4 +1,4 @@
-import { Request, Response } from 'express'
+import { Request, Response } from 'express';
 import { Options } from 'morgan';
 import logger from '@config/utils/winston';
 
@@ -12,4 +12,4 @@ const morganOption: Options<Request, Response> = {
     },
 };
 
-export default morganOption
+export default morganOption;
