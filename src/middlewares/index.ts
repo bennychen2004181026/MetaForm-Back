@@ -1,9 +1,9 @@
-import errorHandler from '@middleware/errorHandler'
-import alreadyLogin from '@middleware/alreadyLogin'
+import errorHandler from '@middleware/errorHandler';
+import alreadyLogin from '@middleware/alreadyLogin';
 
 const middlewares = {
     errorHandler,
-    alreadyLogin
-}
+    alreadyLogin,
+};
 
-export default middlewares
+export default middlewares;

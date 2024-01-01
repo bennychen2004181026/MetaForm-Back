@@ -1,4 +1,4 @@
-import CustomError from "./CustomError";
+import CustomError from './CustomError';
 
 export default class DatabaseError extends CustomError {
     // The status code for database errors, typically a Server Error

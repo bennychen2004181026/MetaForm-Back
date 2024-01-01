@@ -1,4 +1,4 @@
-import CustomError from "./CustomError";
+import CustomError from './CustomError';
 
 export default class EnvironmentError extends CustomError {
     statusCode: number = 500;

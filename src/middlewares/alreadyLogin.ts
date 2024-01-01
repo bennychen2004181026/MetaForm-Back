@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import Errors from '@errors/ClassError';
-import {validateToken} from '@utils/jwt'
+import { validateToken } from '@utils/jwt';
 
 const alreadyLogin = (req: Request, res: Response, next: NextFunction): void => {
     const { authorization } = req.headers;
@@ -13,11 +13,18 @@ const alreadyLogin = (req: Request, res: Response, next: NextFunction): void => 
     const authType = authorization.split(' ')[0];
 
     if (authType !== 'Bearer' || authorization.split(' ').length !== 2) {
-        return next(new Errors.AuthorizationError('Invalid authorization format', 'Header authorization'))
+        return next(
+            new Errors.AuthorizationError('Invalid authorization format', 'Header authorization'),
+        );
     }
 
     if (!authToken) {
-        return next(new Errors.AuthorizationError('Token is not provided or invalid', 'Authorization Token'))
+        return next(
+            new Errors.AuthorizationError(
+                'Token is not provided or invalid',
+                'Authorization Token',
+            ),
+        );
     }
 
     if (!process.env.JWT_SECRET) {
@@ -27,10 +34,9 @@ const alreadyLogin = (req: Request, res: Response, next: NextFunction): void => 
     try {
         validateToken(authToken);
         return next(new Errors.AuthorizationError('You are already logged in.', 'Authorization'));
-    }
-    catch (error) {
-        next(error)
+    } catch (error) {
+        next(error);
     }
 };
 
-export default alreadyLogin
+export default alreadyLogin;
