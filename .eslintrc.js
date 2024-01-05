@@ -27,15 +27,27 @@ module.exports = {
             },
         },
     },
-    plugins: ['@typescript-eslint', 'import'],
+    plugins: ['react', '@typescript-eslint', 'prettier', '@typescript-eslint', 'import'],
     rules: {
         '@typescript-eslint/no-var-requires': 0,
         '@typescript-eslint/no-unused-vars': 'off',
+
         'no-underscore-dangle': ['error', { allow: ['_id', '__v'] }],
         'no-shadow': 'off',
         'no-console': 'error',
         'prefer-destructuring': ['error', { object: true, array: false }],
         'consistent-return': 'off',
+        'prettier/prettier': [
+            'error',
+            {
+                semi: true,
+                trailingComma: 'all',
+                singleQuote: true,
+                printWidth: 100,
+                tabWidth: 4,
+                endOfLine: 'auto',
+            },
+        ],
         'import/extensions': [
             'error',
             'ignorePackages',

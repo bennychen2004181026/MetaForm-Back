@@ -1,5 +1,5 @@
 import { Request, RequestHandler, Response } from 'express';
-import Question from '@models/question.model';
+import Question, { questionTypes } from '@models/question.model';
 
 const getAllQuestions: RequestHandler = async (req: Request, res: Response) => {
     try {
@@ -23,17 +23,45 @@ const getQuestionById: RequestHandler = async (req: Request, res: Response) => {
 };
 
 const createQuestion: RequestHandler = async (req: Request, res: Response) => {
-    try {
-        const { text, type, options } = req.body;
-        if (!text || !type || !options) {
-            return res.status(400).json({ error: 'Please enter all required fields!' });
-        }
-        const newQuestion = new Question({ text, type, options });
-        await newQuestion.save();
-        res.status(201).json({ message: 'Question created successfully' });
-    } catch (error) {
-        res.status(400).json((error as Error).message);
+    const { questions } = req.body;
+    if (!Array.isArray(questions) || questions.length === 0) {
+        return res.status(400).json({ error: 'Please provide at least 1 question to create' });
     }
+    questions.map(
+        async ({
+            questionTitle,
+            questionType,
+            required,
+            expire,
+            options,
+            acceptFileTypes,
+            numOfFiles,
+        }) => {
+            try {
+                if (!questionTitle || !questionType || !required || !expire) {
+                    return res.status(400).json({ error: 'Please enter all required fields!' });
+                }
+                if (questionType === questionTypes.MULTIPLE_CHOICE) {
+                    if (!Array.isArray(options) || options.length < 2) {
+                        return res.status(400).json({
+                            error: 'Please Provide at least 2 options for muitichoice questions',
+                        });
+                    }
+                } else if (questionType === questionTypes.FILE_UPLOAD) {
+                    if (!acceptFileTypes || !numOfFiles) {
+                        return res.status(400).json({
+                            error: 'You have not selected the expected file types or number of files for file-upload questions!',
+                        });
+                    }
+                }
+                const newQuestion = new Question({ questionTitle, questionType, required, expire });
+                await newQuestion.save();
+                return res.status(201).json({ message: 'Question created successfully' });
+            } catch (error) {
+                return res.status(400).json((error as Error).message);
+            }
+        },
+    );
 };
 
 const updateQuestionById = async (req: Request, res: Response) => {
