@@ -32,7 +32,7 @@ const sendOauthScript: RequestHandler = (
                 message: 'Google Oauth user successfully login.',
                 token: '${token}',
                 user: ${JSON.stringify(user)},
-                companyInfo: ${companyInfo},
+                companyInfo: ${JSON.stringify(companyInfo)},
                 isAccountComplete: ${isAccountComplete}
             }, '${APP_URL_ORIGIN}');
             window.close();

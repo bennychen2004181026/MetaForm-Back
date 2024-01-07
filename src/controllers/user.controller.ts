@@ -83,7 +83,7 @@ const prepareAccountCreation: RequestHandler = async (
         const { username, email } = res.locals.decoded;
 
         if (!username || !email) {
-            throw new Errors.ValidationError('Invalid token', 'Token');
+            throw new Errors.ValidationError('Invalid token', 'Email verification token');
         }
 
         const userExists = await User.findOne({ email });
@@ -350,7 +350,10 @@ const resetPassword: RequestHandler = async (
         }).select('+password');
 
         if (!user) {
-            throw new Errors.ValidationError('Invalid or expired password reset token.', 'Token');
+            throw new Errors.ValidationError(
+                'Invalid or expired password reset token.',
+                'Reset password token',
+            );
         }
         // methods like updateOne will not trigger the UserSchema.pre 'save' to encrypt the password hook, so changed back to save()
         user.password = password;
@@ -372,16 +375,18 @@ const getPresignedUrl: RequestHandler = async (
     const { userId } = res.locals;
 
     if (!userId || userId.trim().length === 0) {
-        throw new Errors.NotFoundError('User not found', 'userId');
+        return next(new Errors.NotFoundError('User not found', 'userId'));
     }
 
     const key = `${userId}/companyLogo-${Date.now()}.jpeg`;
     const { S3_BUCKET_NAME } = process.env;
 
     if (!S3_BUCKET_NAME) {
-        throw new Errors.EnvironmentError(
-            'AWS configuration not set in environment variables',
-            'env variables',
+        return next(
+            new Errors.EnvironmentError(
+                'AWS configuration not set in environment variables',
+                'env variables',
+            ),
         );
     }
     try {

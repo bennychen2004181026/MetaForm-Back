@@ -18,7 +18,9 @@ const verifyToken: RequestHandler = (req: Request, res: Response, next: NextFunc
         next();
     } catch (error) {
         if (error instanceof jwt.JsonWebTokenError) {
-            next(new Errors.ValidationError('Invalid or expired token', 'token'));
+            next(
+                new Errors.ValidationError('Invalid or expired token', 'Email verification token'),
+            );
         }
         next(error);
     }

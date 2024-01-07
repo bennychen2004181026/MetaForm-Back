@@ -8,8 +8,8 @@ const verifyHeaderToken = (req: Request, res: Response, next: NextFunction): voi
     if (!authorization) {
         return next(
             new Errors.AuthorizationError(
-                'Authentication failed: No authorization header provided.',
-                'Header authorization',
+                'Authentication failed: No authorization header provided, please re-login',
+                'Token',
             ),
         );
     }
@@ -20,15 +20,15 @@ const verifyHeaderToken = (req: Request, res: Response, next: NextFunction): voi
 
     if (authType !== 'Bearer' || authParts.length !== 2) {
         return next(
-            new Errors.AuthorizationError('Invalid authorization format', 'Header authorization'),
+            new Errors.AuthorizationError('Invalid authorization format, please re-login', 'Token'),
         );
     }
 
     if (!authToken) {
         return next(
             new Errors.AuthorizationError(
-                'Token is not provided or invalid',
-                'Authorization Token',
+                'Token is not provided or invalid, please re-login',
+                'Token',
             ),
         );
     }
@@ -40,7 +40,7 @@ const verifyHeaderToken = (req: Request, res: Response, next: NextFunction): voi
     try {
         const decoded = validateToken(authToken);
         if (decoded instanceof Error) {
-            throw decoded;
+            throw new Errors.AuthorizationError('Invalid token, please re-login', 'Token');
         }
 
         if (
@@ -56,7 +56,7 @@ const verifyHeaderToken = (req: Request, res: Response, next: NextFunction): voi
 
         next();
     } catch (error) {
-        next(error);
+        next(new Errors.AuthorizationError('Invalid token, please re-login', 'Token'));
     }
 };
 

@@ -9,7 +9,7 @@ import { IUser } from '@interfaces/users';
 import { Role } from '@interfaces/userEnum';
 import Errors from '@errors/ClassError';
 import { sendEmail, emailTemplates } from '@utils/emailService';
-import { validateToken } from '@utils/jwt';
+import { validateToken, generateTokenHelper } from '@utils/jwt';
 import { currentAppUrl } from '@utils/urlsExport';
 
 /**
@@ -336,7 +336,20 @@ const inviteEmployees: RequestHandler = async (
 
         const { companyName } = existedCompany;
 
-        const emailSendingPromises = emails.map(async (email: string) => {
+        const existingUsers = await User.find({ email: { $in: emails } })
+            .select('email')
+            .exec();
+        const existingEmails = existingUsers.map(user => user.email);
+        const newEmails = emails.filter(email => !existingEmails.includes(email));
+
+        if (newEmails.length === 0) {
+            throw new Errors.ValidationError(
+                'All provided emails are already registered in the database.',
+                'emails',
+            );
+        }
+
+        const emailSendingPromises = newEmails.map(async (email: string) => {
             try {
                 const verificationToken = jwt.sign({ email, invitedBy: userId }, JWT_SECRET, {
                     expiresIn: '6h',
@@ -363,28 +376,20 @@ const inviteEmployees: RequestHandler = async (
 
         const failedEmails = results.filter(result => !result.success);
         const successEmails = results.filter(result => result.success);
-        const failedEmailsMessage = failedEmails.map(result => result.email).join(', ');
-        const failedEmailAddresses = failedEmails.map(result => result.email);
 
-        // All failures
-        if (successEmails.length === 0) {
-            throw new Errors.BusinessLogicError(
-                `Failed to send verification emails to: ${failedEmailsMessage}`,
-            );
+        const successEmailsCount = successEmails.length;
+        let message =
+            successEmailsCount === newEmails.length
+                ? `Verification emails have been sent to all new, unregistered email addresses.`
+                : `Verification emails have been sent to some of the new, unregistered email addresses, but failed for others.`;
+
+        if (existingEmails.length > 0) {
+            const skippedEmails = existingEmails.join(', ');
+            message += `\nNote: The following emails were skipped as they are already registered: ${skippedEmails}.`;
         }
-
-        // All success
-        if (failedEmails.length === 0) {
-            return res.status(200).json({
-                message: 'Verification emails have been sent to all employees.',
-            });
-        }
-
-        // Successes and failures
         return res.status(200).json({
-            message:
-                'Verification emails have been sent to some of the employees, but some failed as well.',
-            failedEmailAddresses,
+            message,
+            failedEmailAddresses: failedEmails.map(result => result.email),
         });
     } catch (error: unknown) {
         next(error);
@@ -413,7 +418,10 @@ const AddEmployeeToCompany: RequestHandler = async (
         const { email, invitedBy } = validateToken(token) as { email: string; invitedBy: string };
 
         if (!email || !invitedBy) {
-            throw new Errors.ValidationError('Missing email or invitedBy in jwt', 'jwt');
+            throw new Errors.ValidationError(
+                'Token is invalid, please resend the invite email',
+                'jwt',
+            );
         }
 
         const existingUser = await User.findOne({ email }, null, { session }).exec();
@@ -461,6 +469,7 @@ const AddEmployeeToCompany: RequestHandler = async (
 
         const updatedCompany: ICompany = await currentCompany.save({ session });
         const companyJson: ICompany = updatedCompany.toJSON();
+        const loginToken: string = generateTokenHelper(savedUser._id, savedUser.role);
 
         await session.commitTransaction();
         session.endSession();
@@ -469,6 +478,7 @@ const AddEmployeeToCompany: RequestHandler = async (
             message: 'Successfully create employee account',
             companyJson,
             userJson,
+            loginToken,
         });
     } catch (error: unknown) {
         if (session) {
@@ -486,25 +496,30 @@ const updateCompany: RequestHandler = async (
 ): Promise<Response | void> => {
     const { userId, role } = res.locals;
     const { companyId } = req.params;
-    const updateData = req.body;
-
-    if (!userId || userId.trim().length === 0 || !role) {
-        throw new Errors.NotFoundError('UserId and role not found', 'userId and role');
-    }
+    const { companyName, abn, logo, industry } = req.body;
 
     try {
-        const updateFields: { [key: string]: string } = {};
-        Object.keys(updateData).forEach(key => {
-            if (updateData[key]) {
-                updateFields[key] = updateData[key];
-            }
-        });
+        if (!userId || userId.trim().length === 0 || !role) {
+            throw new Errors.NotFoundError('UserId and role not found', 'userId and role');
+        }
+
+        const updateData: Partial<ICompany> = {};
+        if (companyName) updateData.companyName = companyName;
+        if (abn) updateData.abn = abn;
+        if (logo) updateData.logo = logo;
+        if (industry) updateData.industry = industry;
+
+        if (Object.keys(updateData).length === 0) {
+            return res.status(201).json({
+                message: 'Company profile remain unchanged',
+            });
+        }
 
         const updatedCompany: ICompany | null = await Company.findByIdAndUpdate(
             companyId,
-            { $set: updateFields },
+            updateData,
             { new: true },
-        );
+        ).exec();
 
         if (!updatedCompany) {
             throw new Errors.DatabaseError(
