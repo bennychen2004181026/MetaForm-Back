@@ -1,17 +1,21 @@
 import { Schema, model } from 'mongoose';
 
 enum questionTypes {
-    MULTIPLE_CHOICE = 'Multiple Choice',
-    SHORT_ANSWER = 'Short answer',
-    PARAGRAPH = 'Paragraph',
-    CHECK_BOXES = 'CheckBoxes',
-    FILE_UPLOAD = 'File upload',
-    DATE = 'Date',
-    TIME = 'Time',
+    MULTIPLE_CHOICE = '0',
+    SHORT_ANSWER = '1',
+    PARAGRAPH = '2',
+    CHECK_BOXES = '3',
+    FILE_UPLOAD = '4',
+    DATE = '5',
+    TIME = '6',
 }
+
 const questionSchema = new Schema({
     questionTitle: {
-        type: String,
+        type: {
+            content: { type: String, required: true },
+            image: { type: { name: { type: String, required: true }, url: { type: String } } },
+        },
         required: true,
     },
     questionType: {
@@ -21,7 +25,11 @@ const questionSchema = new Schema({
     },
     options: [
         {
-            type: String,
+            type: {
+                value: { type: String, required: true },
+                otherOption: { type: Boolean },
+                image: { type: { name: { type: String, required: true }, url: { type: String } } },
+            },
         },
     ],
     answers: [
@@ -46,7 +54,7 @@ const questionSchema = new Schema({
     ],
     numOfFiles: {
         type: Number,
-        enum: [1, 2, 3],
+        enum: ['1', '2', '3'],
     },
 });
 const Question = model('Question', questionSchema);

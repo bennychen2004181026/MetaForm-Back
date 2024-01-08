@@ -25,10 +25,6 @@ const formSchema = new Schema(
                 ref: 'Response',
             },
         ],
-        expire: {
-            type: Date,
-            required: true,
-        },
         description: {
             type: String,
         },
