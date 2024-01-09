@@ -30,13 +30,7 @@ const createQuestion: RequestHandler = async (req: Request, res: Response) => {
         if (!questionTitle || !questionType || required === undefined) {
             return res.status(400).json({ error: 'Please enter all required fields!' });
         }
-        if (questionType === questionTypes.MULTIPLE_CHOICE) {
-            if (!Array.isArray(options) || options.length < 2) {
-                return res.status(400).json({
-                    error: 'Please Provide at least 2 options for muitichoice questions',
-                });
-            }
-        } else if (questionType === questionTypes.FILE_UPLOAD) {
+        if (questionType === questionTypes.FILE_UPLOAD) {
             if (!acceptFileTypes || !numOfFiles) {
                 return res.status(400).json({
                     error: 'You have not selected the expected file types or number of files for file-upload questions!',
