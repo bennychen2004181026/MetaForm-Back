@@ -4,6 +4,7 @@ import companyRouter from './company.route';
 import formRouter from './form.route';
 import questionRouter from './question.route';
 import responseRouter from './response.route';
+import answerRouter from './answer.route';
 
 const router = Router();
 const healthCheckPath = '/health';
@@ -16,5 +17,6 @@ router.use('/forms', formRouter);
 router.use('/questions', questionRouter);
 router.use('/users', userRouter);
 router.use('/responses', responseRouter);
+router.use('/answers', answerRouter);
 
 export default router;
