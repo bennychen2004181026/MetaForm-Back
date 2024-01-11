@@ -6,20 +6,21 @@ const changePasswordValidator = [
     body('newPassword')
         .trim()
         .notEmpty()
-        .withMessage('Password cannot be empty')
+        .withMessage('New Password cannot be empty')
         .isString()
+        .withMessage('New Password must be string')
         .isLength({ min: 8, max: 32 })
-        .withMessage('Password must be at least 8 to 32 characters long')
+        .withMessage('New Password must be at least 8 to 32 characters long')
         .matches(/[0-9]/)
-        .withMessage('Password must contain a number')
+        .withMessage('New Password must contain a number')
         .matches(/[a-z]/)
-        .withMessage('Password must contain a lowercase letter')
+        .withMessage('New Password must contain a lowercase letter')
         .matches(/[A-Z]/)
-        .withMessage('Password must contain an uppercase letter')
+        .withMessage('New Password must contain an uppercase letter')
         .matches(/[!@#$%^_&*]/)
-        .withMessage('Password must contain a special character (@,#,$,%,^,_,&,*,!)'),
+        .withMessage('New Password must contain a special character (@,#,$,%,^,_,&,*,!)'),
 
-    body('password').trim().notEmpty().withMessage('Password cannot be empty').isString(),
+    body('password').trim().notEmpty().withMessage('Old Password cannot be empty').isString(),
 
     body('confirmPassword')
         .trim()
