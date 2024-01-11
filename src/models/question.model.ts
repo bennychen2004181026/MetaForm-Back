@@ -26,6 +26,7 @@ const questionSchema = new Schema({
     options: [
         {
             type: {
+                id: { type: String, required: true },
                 value: { type: String, required: true },
                 otherOption: { type: Boolean },
                 image: { type: { name: { type: String, required: true }, url: { type: String } } },
@@ -49,12 +50,12 @@ const questionSchema = new Schema({
     acceptFileTypes: [
         {
             type: String,
-            enum: ['Image', 'PDF'],
+            enum: ['Image', 'PDF', 'Presention', 'Document'],
         },
     ],
     numOfFiles: {
         type: Number,
-        enum: ['1', '2', '3'],
+        enum: ['1', '3', '5'],
     },
 });
 const Question = model('Question', questionSchema);
