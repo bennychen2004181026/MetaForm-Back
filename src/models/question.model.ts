@@ -50,12 +50,11 @@ const questionSchema = new Schema({
     acceptFileTypes: [
         {
             type: String,
-            enum: ['Image', 'PDF', 'Presention', 'Document'],
         },
     ],
     numOfFiles: {
         type: Number,
-        enum: ['1', '3', '5'],
+        enum: [1, 3, 5],
     },
 });
 const Question = model('Question', questionSchema);
