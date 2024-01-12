@@ -99,4 +99,11 @@ userRouter.get(
 
 userRouter.get('/getCloudFrontPresignedUrl', userControllers.getCloudFrontPresignedUrl);
 
+userRouter.post(
+    '/:userId/change-password',
+    userRouteMiddlewares.verifyHeaderToken,
+    routeValidators.changePasswordValidator,
+    userControllers.changePassword,
+);
+
 export default userRouter;

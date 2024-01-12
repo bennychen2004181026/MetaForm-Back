@@ -445,6 +445,38 @@ const getCloudFrontPresignedUrl: RequestHandler = async (
     }
 };
 
+const changePassword: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
+    const { userId } = res.locals as { userId: string };
+    const { newPassword, password } = req.body;
+
+    if (!userId || userId.trim().length === 0) {
+        return next(new Errors.NotFoundError('User not found', 'userId'));
+    }
+
+    try {
+        const user: IUser | null = await User.findById(userId).select('+password').exec();
+
+        if (!user?.password) {
+            throw new Errors.NotFoundError('User not found or User does not has password', 'User');
+        }
+        const comparePassword: boolean = await bcrypt.compare(password, user.password);
+
+        if (!comparePassword) {
+            throw new Errors.AuthorizationError('Invalid credentials', 'password');
+        }
+
+        user.password = newPassword;
+        await user.save();
+        res.status(200).json({ message: 'Your password has been successfully reset.' });
+    } catch (error: unknown) {
+        return next(error);
+    }
+};
+
 export default {
     sendVerificationEmail,
     prepareAccountCreation,
@@ -455,4 +487,5 @@ export default {
     resetPassword,
     getPresignedUrl,
     getCloudFrontPresignedUrl,
+    changePassword,
 };
