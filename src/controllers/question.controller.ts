@@ -1,5 +1,5 @@
 import { Request, RequestHandler, Response } from 'express';
-import Question from '@models/question.model';
+import Question, { questionTypes } from '@models/question.model';
 
 const getAllQuestions: RequestHandler = async (req: Request, res: Response) => {
     try {
@@ -23,16 +23,35 @@ const getQuestionById: RequestHandler = async (req: Request, res: Response) => {
 };
 
 const createQuestion: RequestHandler = async (req: Request, res: Response) => {
+    const { question } = req.body;
+    const { questionTitle, questionType, required, options, acceptFileTypes, numOfFiles } =
+        question;
     try {
-        const { text, type, options } = req.body;
-        if (!text || !type || !options) {
+        if (!questionTitle || !questionType || required === undefined) {
             return res.status(400).json({ error: 'Please enter all required fields!' });
         }
-        const newQuestion = new Question({ text, type, options });
+        if (questionType === questionTypes.FILE_UPLOAD) {
+            if (!acceptFileTypes || !numOfFiles) {
+                return res.status(400).json({
+                    error: 'You have not selected the expected file types or number of files for file-upload questions!',
+                });
+            }
+        }
+        const newQuestion = new Question({
+            questionTitle,
+            questionType,
+            required,
+            options,
+            acceptFileTypes,
+            numOfFiles,
+        });
         await newQuestion.save();
-        res.status(201).json({ message: 'Question created successfully' });
+        return res.status(201).json({
+            message: 'Question created successfully',
+            createdQuestion: newQuestion,
+        });
     } catch (error) {
-        res.status(400).json((error as Error).message);
+        return res.status(400).json((error as Error).message);
     }
 };
 

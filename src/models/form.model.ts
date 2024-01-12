@@ -25,14 +25,6 @@ const formSchema = new Schema(
                 ref: 'Response',
             },
         ],
-        validFrom: {
-            type: Date,
-            required: true,
-        },
-        expire: {
-            type: Date,
-            required: true,
-        },
         description: {
             type: String,
         },

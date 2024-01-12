@@ -1,42 +1,63 @@
 import { Schema, model } from 'mongoose';
 
+enum questionTypes {
+    MULTIPLE_CHOICE = '0',
+    SHORT_ANSWER = '1',
+    PARAGRAPH = '2',
+    CHECK_BOXES = '3',
+    FILE_UPLOAD = '4',
+    DATE = '5',
+    TIME = '6',
+}
+
 const questionSchema = new Schema({
-    text: {
-        type: String,
+    questionTitle: {
+        type: {
+            content: { type: String, required: true },
+            image: { type: { name: { type: String, required: true }, url: { type: String } } },
+        },
         required: true,
     },
-    type: {
+    questionType: {
         type: String,
-        enum: ['singleChoice', 'multipleChoice', 'dropDown'],
+        enum: questionTypes,
         required: true,
     },
     options: [
         {
-            type: String,
-            required: true,
+            type: {
+                id: { type: String, required: true },
+                value: { type: String, required: true },
+                otherOption: { type: Boolean },
+                image: { type: { name: { type: String, required: true }, url: { type: String } } },
+            },
         },
     ],
-    expectedAnswerType: {
-        type: String,
-        enum: ['number', 'string', 'array'],
-    },
     answers: [
         {
             type: Schema.Types.ObjectId,
             ref: 'Answer',
         },
     ],
-    mandatory: {
+    required: {
         type: Boolean,
+        required: true,
     },
-    createAt: {
+    createdAt: {
         type: Date,
         default: Date.now,
     },
-    updateAt: {
-        type: Date,
-        default: Date.now,
+    acceptFileTypes: [
+        {
+            type: String,
+            enum: ['Image', 'PDF', 'Presention', 'Document'],
+        },
+    ],
+    numOfFiles: {
+        type: Number,
+        enum: ['1', '3', '5'],
     },
 });
 const Question = model('Question', questionSchema);
 export default Question;
+export { questionTypes };
