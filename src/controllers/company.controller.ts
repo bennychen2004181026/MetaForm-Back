@@ -570,10 +570,15 @@ const promoteEmployee: RequestHandler = async (
         const updatedUser: IUser = await targetUser.save();
         const userJson: IUser = updatedUser.toJSON();
         const updatedRole = updatedUser.role;
+
+        const companyId = updatedUser.company;
+        const company = await Company.findById(companyId).populate('employees').exec();
+        const employeesArray = company?.employees;
         return res.status(201).json({
             message: `Successfully promote ${Role.Employee} to ${Role.Admin}`,
             userJson,
             updatedRole,
+            employeesArray,
         });
     } catch (error: unknown) {
         next(error);
@@ -592,10 +597,15 @@ const demoteAdmin: RequestHandler = async (
         const updatedUser: IUser = await targetUser.save();
         const userJson: IUser = updatedUser.toJSON();
         const updatedRole = updatedUser.role;
+
+        const companyId = updatedUser.company;
+        const company = await Company.findById(companyId).populate('employees').exec();
+        const employeesArray = company?.employees;
         return res.status(201).json({
             message: `Successfully promote ${Role.Admin} to ${Role.Employee}`,
             userJson,
             updatedRole,
+            employeesArray,
         });
     } catch (error: unknown) {
         next(error);
@@ -627,9 +637,14 @@ const deactivateUser: RequestHandler = async (req, res, next) => {
 
         const updatedUser = await targetUser.save();
         const userJson: IUser = updatedUser.toJSON();
+
+        const companyId = updatedUser.company;
+        const company = await Company.findById(companyId).populate('employees').exec();
+        const employeesArray = company?.employees;
         res.status(200).json({
             message: `Successfully deactivated user: ${targetUser.email}`,
             userJson,
+            employeesArray,
         });
     } catch (error) {
         next(error);
@@ -668,9 +683,14 @@ const reactivateUser: RequestHandler = async (req, res, next) => {
 
         const updatedUser = await targetUser.save();
         const userJson: IUser = updatedUser.toJSON();
+
+        const companyId = updatedUser.company;
+        const company = await Company.findById(companyId).populate('employees').exec();
+        const employeesArray = company?.employees;
         res.status(200).json({
             message: `Successfully deactivated user: ${targetUser.email}`,
             userJson,
+            employeesArray,
         });
     } catch (error) {
         next(error);
