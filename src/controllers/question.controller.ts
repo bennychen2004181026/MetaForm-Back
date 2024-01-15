@@ -24,7 +24,7 @@ const getQuestionById: RequestHandler = async (req: Request, res: Response) => {
 
 const createQuestion: RequestHandler = async (req: Request, res: Response) => {
     const { question } = req.body;
-    const { questionTitle, questionType, required, options, acceptFileTypes, numOfFiles } =
+    const { questionTitle, questionType, required, other, options, acceptFileTypes, numOfFiles } =
         question;
     try {
         if (!questionTitle || !questionType || required === undefined) {
@@ -44,6 +44,7 @@ const createQuestion: RequestHandler = async (req: Request, res: Response) => {
             options,
             acceptFileTypes,
             numOfFiles,
+            other,
         });
         await newQuestion.save();
         return res.status(201).json({

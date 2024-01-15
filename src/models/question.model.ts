@@ -14,7 +14,14 @@ const questionSchema = new Schema({
     questionTitle: {
         type: {
             content: { type: String, required: true },
-            image: { type: { name: { type: String, required: true }, url: { type: String } } },
+            image: {
+                type: {
+                    name: { type: String, required: true },
+                    url: { type: String },
+                    originalName: { type: String, required: true },
+                    remoteUrl: { type: String, required: true },
+                },
+            },
         },
         required: true,
     },
@@ -29,7 +36,14 @@ const questionSchema = new Schema({
                 id: { type: String, required: true },
                 value: { type: String, required: true },
                 otherOption: { type: Boolean },
-                image: { type: { name: { type: String, required: true }, url: { type: String } } },
+                image: {
+                    type: {
+                        name: { type: String, required: true },
+                        url: { type: String },
+                        originalName: { type: String, required: true },
+                        remoteUrl: { type: String, required: true },
+                    },
+                },
             },
         },
     ],
@@ -43,6 +57,7 @@ const questionSchema = new Schema({
         type: Boolean,
         required: true,
     },
+    other: { type: Boolean },
     createdAt: {
         type: Date,
         default: Date.now,
