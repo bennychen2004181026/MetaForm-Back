@@ -18,7 +18,13 @@ import CastError from '@middleware/errors/CastError';
 import middlewares from '@middleware/index';
 
 const corsOptions = {
-    origin: `http://localhost:${process.env.FRONT || 3000}`,
+    origin: [
+        'http://localhost:3001',
+        'https://api.metaformpro.info',
+        'http://localhost:3000',
+        'https://metaformpro.info',
+        '*',
+    ],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization'],
 };
